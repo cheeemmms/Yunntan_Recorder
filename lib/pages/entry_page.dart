@@ -75,11 +75,6 @@ class _EntryPageState extends ConsumerState<EntryPage> {
     final bureauAsync = ref.watch(railwayBureauProvider);
     final trainType = _inferTrainType(_trainNoCtrl.text);
 
-    final currentSeatTypes = _filteredSeatTypes(_seatCategory);
-    if (!currentSeatTypes.contains(_seatType)) {
-      _seatType = currentSeatTypes.first;
-    }
-
     return Scaffold(
       appBar: AppBar(title: const Text('录入运转')),
       body: SingleChildScrollView(
@@ -120,11 +115,9 @@ class _EntryPageState extends ConsumerState<EntryPage> {
                     initialValue: _trainModel,
                     onConfirm: (r) => setState(() {
                       _trainModel = r;
-                      if (!_isCoach) {
-                        final valid = _filteredSeatTypes(_seatCategory);
-                        if (!valid.contains(_seatType)) {
-                          _seatType = valid.first;
-                        }
+                      final valid = _filteredSeatTypes(_seatCategory);
+                      if (!valid.contains(_seatType)) {
+                        _seatType = valid.first;
                       }
                     }),
                   ),
@@ -160,7 +153,7 @@ class _EntryPageState extends ConsumerState<EntryPage> {
                 const SizedBox(width: 12),
                 Expanded(child: _buildDropdown(theme, '类型', _seatType, _filteredSeatTypes(_seatCategory), (v) {
                   setState(() => _seatType = v!);
-                })),
+                }, key: ValueKey('seat_${_trainModel?.category.type ?? 'none'}'))),
               ]),
             ]),
             const SizedBox(height: 20),
@@ -278,8 +271,9 @@ class _EntryPageState extends ConsumerState<EntryPage> {
     );
   }
 
-  Widget _buildDropdown(ThemeData theme, String label, String value, List<String> items, void Function(String?) onChanged) {
+  Widget _buildDropdown(ThemeData theme, String label, String value, List<String> items, void Function(String?) onChanged, {Key? key}) {
     return DropdownButtonFormField<String>(
+      key: key,
       value: value,
       decoration: InputDecoration(
         labelText: label,
