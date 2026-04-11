@@ -2,6 +2,8 @@ import 'package:flex_color_scheme/flex_color_scheme.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import 'providers/train_data_provider.dart';
+
 void main() {
   runApp(const ProviderScope(child: TrainLedgerApp()));
 }
@@ -56,6 +58,8 @@ class HomePage extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
+    final hierarchyAsync = ref.watch(trainHierarchyProvider);
+    final bureauAsync = ref.watch(railwayBureauProvider);
 
     return Scaffold(
       body: Center(
@@ -80,6 +84,43 @@ class HomePage extends ConsumerWidget {
               '铁道运转记录程序',
               style: theme.textTheme.bodyLarge?.copyWith(
                 color: theme.colorScheme.onSurfaceVariant,
+              ),
+            ),
+            const SizedBox(height: 24),
+            hierarchyAsync.when(
+              data: (hierarchy) => Text(
+                '车型字典: ${hierarchy.categories.length} 大类, '
+                '${hierarchy.availableCategories.length} 可用',
+                style: theme.textTheme.bodyMedium?.copyWith(
+                  color: theme.colorScheme.onSurfaceVariant,
+                ),
+              ),
+              loading: () => const SizedBox(
+                width: 16,
+                height: 16,
+                child: CircularProgressIndicator(strokeWidth: 2),
+              ),
+              error: (e, _) => Text(
+                '车型字典加载失败: $e',
+                style: TextStyle(color: theme.colorScheme.error),
+              ),
+            ),
+            const SizedBox(height: 4),
+            bureauAsync.when(
+              data: (bureau) => Text(
+                '局段字典: ${bureau.bureaus.length} 局',
+                style: theme.textTheme.bodyMedium?.copyWith(
+                  color: theme.colorScheme.onSurfaceVariant,
+                ),
+              ),
+              loading: () => const SizedBox(
+                width: 16,
+                height: 16,
+                child: CircularProgressIndicator(strokeWidth: 2),
+              ),
+              error: (e, _) => Text(
+                '局段字典加载失败: $e',
+                style: TextStyle(color: theme.colorScheme.error),
               ),
             ),
           ],

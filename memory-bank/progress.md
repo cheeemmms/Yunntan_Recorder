@@ -106,14 +106,26 @@ flutter build apk        # 构建 APK
 - [x] `assets/data/railway_bureau.json` 已创建（18 局 + 客运段数据）
 - [x] `pubspec.yaml` 已添加 `assets/data/` 声明
 - [x] design-document.md 已更新：新增 3.5 设置页字典编辑功能（完整 CRUD，JSON 种子→数据库策略）
+- [x] 数据模型已创建：`lib/models/train_hierarchy.dart`、`lib/models/railway_bureau.dart`
+- [x] 数据加载服务已创建：`lib/data/train_data_loader.dart`
+- [x] Riverpod Provider 已创建：`lib/providers/train_data_provider.dart`
+- [x] `lib/main.dart` 已更新：首页显示字典加载统计信息
 
 ### 待完成
-1. [ ] 编写数据加载与解析代码（`lib/data/`）
-2. [ ] 验证测试：确认 JSON 解析正确，级联数据可索引
+1. [ ] 验证测试：在外部终端运行 `flutter run`，确认首页显示字典加载统计信息
 
 ---
 
 ## 变更日志
+
+### 2026-04-11 (第八次更新)
+- 数据加载与解析代码完成
+- lib/models/train_hierarchy.dart: TrainCategory/TrainPlatform/TrainSeries/TrainHierarchy 4级模型
+- lib/models/railway_bureau.dart: BureauSection/RailwayBureau/RailwayBureauData 模型
+- lib/data/train_data_loader.dart: JSON 加载服务（rootBundle + jsonDecode）
+- lib/providers/train_data_provider.dart: Riverpod AsyncNotifierProvider
+- lib/main.dart 更新：首页显示字典加载统计（大类数/可用数/局数）
+- 清理 .gitkeep 文件（data/models/providers 已有实际代码）
 
 ### 2026-04-11 (第七次更新)
 - railway_bureau.json 创建完成：18 局 + 客运段数据，所有段标记 category: "客运"
