@@ -36,11 +36,13 @@ class _EntryPageState extends ConsumerState<EntryPage> {
   };
 
   bool get _isCoach => _trainModel?.category.type == 'Coach';
+  bool get _isEMU => _trainModel?.category.type == 'EMU';
 
   List<String> _filteredSeatTypes(String category) {
     final all = _allSeatTypes[category]!;
-    if (_isCoach) return all;
-    return all.where((t) => !{'硬座', '软座', '硬卧', '软卧'}.contains(t)).toList();
+    if (_trainModel == null || _isCoach) return all;
+    if (_isEMU) return all.where((t) => !{'硬座', '软座', '硬卧', '软卧'}.contains(t)).toList();
+    return all;
   }
 
   String _inferTrainType(String trainNo) {
@@ -72,6 +74,11 @@ class _EntryPageState extends ConsumerState<EntryPage> {
     final hierarchyAsync = ref.watch(trainHierarchyProvider);
     final bureauAsync = ref.watch(railwayBureauProvider);
     final trainType = _inferTrainType(_trainNoCtrl.text);
+
+    final currentSeatTypes = _filteredSeatTypes(_seatCategory);
+    if (!currentSeatTypes.contains(_seatType)) {
+      _seatType = currentSeatTypes.first;
+    }
 
     return Scaffold(
       appBar: AppBar(title: const Text('录入运转')),

@@ -47,51 +47,29 @@ class BureauPicker extends StatefulWidget {
 
 class _BureauPickerState extends State<BureauPicker> {
   late List<RailwayBureau> _bureaus;
-  late int _l1Index;
-  late int _l2Index;
+  int _l1 = 0;
+  int _l2 = 0;
 
-  late FixedExtentScrollController _l1Ctrl;
-  late FixedExtentScrollController _l2Ctrl;
-
-  List<BureauSection> get _sections => _bureaus[_l1Index].passengerSections;
+  List<BureauSection> get _sections => _bureaus[_l1].passengerSections;
 
   @override
   void initState() {
     super.initState();
     _bureaus = widget.data.bureauList;
-    _l1Index = 0;
-    _l2Index = 0;
 
     if (widget.initialValue != null) {
       final iv = widget.initialValue!;
       final bi = _bureaus.indexWhere((b) => b.key == iv.bureauKey);
       if (bi >= 0) {
-        _l1Index = bi;
+        _l1 = bi;
         final si = _sections.indexWhere((s) => s.name == iv.section.name);
-        if (si >= 0) _l2Index = si;
+        if (si >= 0) _l2 = si;
       }
     }
-
-    _l1Ctrl = FixedExtentScrollController(initialItem: _l1Index);
-    _l2Ctrl = FixedExtentScrollController(initialItem: _l2Index);
-  }
-
-  void _onL1Changed(int index) {
-    setState(() {
-      _l1Index = index;
-      _l2Index = 0;
-      _l2Ctrl.jumpToItem(0);
-    });
-  }
-
-  void _onL2Changed(int index) {
-    setState(() {
-      _l2Index = index;
-    });
   }
 
   void _handleConfirm() {
-    final bureau = _bureaus[_l1Index];
+    final bureau = _bureaus[_l1];
     if (_sections.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('该局暂无客运段数据')),
@@ -100,16 +78,9 @@ class _BureauPickerState extends State<BureauPicker> {
     }
     widget.onConfirm(BureauPickerResult(
       bureauKey: bureau.key,
-      section: _sections[_l2Index],
+      section: _sections[_l2],
     ));
     Navigator.pop(context);
-  }
-
-  @override
-  void dispose() {
-    _l1Ctrl.dispose();
-    _l2Ctrl.dispose();
-    super.dispose();
   }
 
   @override
@@ -142,8 +113,22 @@ class _BureauPickerState extends State<BureauPicker> {
           Expanded(
             child: Row(
               children: [
-                _buildWheel(theme, _l1Ctrl, _bureaus.map((b) => b.key).toList(), _onL1Changed),
-                _buildWheel(theme, _l2Ctrl, _sections.map((s) => s.name).toList(), _onL2Changed, emptyHint: '无客运段'),
+                _buildWheel(
+                  items: _bureaus.map((b) => b.key).toList(),
+                  selectedIndex: _l1,
+                  onChanged: (i) => setState(() {
+                    _l1 = i;
+                    _l2 = 0;
+                  }),
+                ),
+                _buildWheel(
+                  items: _sections.map((s) => s.name).toList(),
+                  selectedIndex: _sections.isEmpty ? -1 : _l2,
+                  emptyHint: '无客运段',
+                  onChanged: (i) => setState(() {
+                    _l2 = i;
+                  }),
+                ),
               ],
             ),
           ),
@@ -152,19 +137,32 @@ class _BureauPickerState extends State<BureauPicker> {
     );
   }
 
-  Widget _buildWheel(ThemeData theme, FixedExtentScrollController ctrl, List<String> items, void Function(int) onChanged, {String emptyHint = '-'}) {
+  Widget _buildWheel({
+    required List<String> items,
+    required int selectedIndex,
+    required void Function(int) onChanged,
+    String emptyHint = '-',
+  }) {
+    if (items.isEmpty) {
+      return Expanded(
+        child: Center(
+          child: Text(emptyHint, style: Theme.of(context).textTheme.bodySmall),
+        ),
+      );
+    }
+
+    final safeIndex = selectedIndex.clamp(0, items.length - 1);
+
     return Expanded(
-      child: items.isEmpty
-          ? Center(child: Text(emptyHint, style: theme.textTheme.bodySmall))
-          : CupertinoPicker.builder(
-              scrollController: ctrl,
-              itemExtent: 36,
-              childCount: items.length,
-              onSelectedItemChanged: onChanged,
-              itemBuilder: (_, i) => Center(
-                child: Text(items[i], style: const TextStyle(fontSize: 16)),
-              ),
-            ),
+      child: CupertinoPicker(
+        key: ValueKey(items.hashCode),
+        itemExtent: 36,
+        scrollController: FixedExtentScrollController(initialItem: safeIndex),
+        onSelectedItemChanged: onChanged,
+        children: items.map((item) => Center(
+          child: Text(item, style: const TextStyle(fontSize: 16)),
+        )).toList(),
+      ),
     );
   }
 }
