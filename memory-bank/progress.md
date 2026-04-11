@@ -103,16 +103,26 @@ flutter build apk        # 构建 APK
 - [x] Coach（普速客车车底）数据已录入：25G、25K、25T、25B（单层级，选 L2 即为最终型号）
 - [x] HXD/SS/DF_HXN（本务机车）已预留占位，标记 `developing: true`，前端点击时 toast 提示"功能开发中"
 - [x] `assets/data/train_hierarchy.json` 已更新（含 CR + CRH + Coach + 机车占位）
+- [x] `assets/data/railway_bureau.json` 已创建（18 局 + 客运段数据）
 - [x] `pubspec.yaml` 已添加 `assets/data/` 声明
+- [x] design-document.md 已更新：新增 3.5 设置页字典编辑功能（完整 CRUD，JSON 种子→数据库策略）
 
 ### 待完成
-1. [ ] `railway_bureau.json`（18 局字典）编写
-2. [ ] 编写数据加载与解析代码（`lib/data/`）
-3. [ ] 验证测试：确认 JSON 解析正确，级联数据可索引
+1. [ ] 编写数据加载与解析代码（`lib/data/`）
+2. [ ] 验证测试：确认 JSON 解析正确，级联数据可索引
 
 ---
 
 ## 变更日志
+
+### 2026-04-11 (第七次更新)
+- railway_bureau.json 创建完成：18 局 + 客运段数据，所有段标记 category: "客运"
+- design-document.md 升级至 v1.2：新增 3.5 设置页字典编辑功能
+  - 用户可在设置页对车型字典和客运段字典进行完整 CRUD
+  - 数据存储策略：JSON 种子文件首次启动加载到 ObjectBox，后续纯数据库操作
+  - 车型选择器从 3 级联动更新为 4 级联动（L1→L2→L3→L4）
+  - HXD/SS/DF_HXN 标记 developing，点击 toast 提示
+  - CR200J 版本号特殊处理规则
 
 ### 2026-04-11 (第六次更新)
 - Coach（普速客车车底）数据录入：25G、25K、25T、25B（单层级结构）

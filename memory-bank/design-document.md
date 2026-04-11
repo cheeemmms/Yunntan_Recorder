@@ -1,5 +1,5 @@
 # 产品需求文档 (PRD)：铁道运转记录程序 (Train Ledger)
-版本：1.1 (MVP)
+版本：1.2 (MVP)
 定位：一款面向硬核铁道迷的本地化、专业级运转记录账本。
 设计哲学：极简、专业、数据驱动、去社交化（本地优先）。
 
@@ -7,7 +7,7 @@
 - 目标：提供比 Excel 更专业、比普通记事本更具仪式感的火车运转记录工具。
 - 核心受众：追求极致数据记录的铁道迷、车迷。
 - 技术栈：Flutter + Riverpod (Android 优先，支持后期移植 iOS)。
-- 存储：Local-first (Isar NoSQL 数据库)，不依赖云端服务器。
+- 存储：Local-first (ObjectBox NoSQL 数据库)，不依赖云端服务器。
 - Android SDK：minSdkVersion 21 / targetSdkVersion 34 / compileSdkVersion 34。
 
 ## 2. 视觉与交互规范
@@ -47,10 +47,12 @@
 - 席位选择（一级下拉选类别，二级下拉自动过滤）：
   - 坐席：无座、硬座、软座、二等座、一等座、商务座。
   - 卧席：硬卧、软卧、二等卧、一等卧、高级软卧。
-- 车底型号（CupertinoPicker 三级联动）：
-  - L1: 大类（CR、CRH、HXD、SS、DF/HXN、Coach），每个 L1 带 type 标识（EMU/Loco/Coach）。
+- 车底型号（CupertinoPicker 四级联动）：
+  - L1: 大类（CR、CRH、HXD、SS、DF/HXN、Coach），每个 L1 带 type 标识（EMU/Loco/Coach）。HXD/SS/DF_HXN 标记为 developing，点击时 toast 提示"功能开发中"。
   - L2: 平台（如 CR400, CRH3, 25T 等）。
-  - L3: 细分型号（如 CR400AF-Z, CRH380AL 等）。
+  - L3: 系列（如 CR400AF, CRH380A 等），L3 可选即止作为最终型号。
+  - L4: 变体（如 Z, AZ 等），可选级别，为空则不显示第四轮。
+  - CR200J 特殊处理：选择时显示版本号（如 CR200J(1.0)），记录展示时忽略版本号（如 CR200J1-C）。
 - 备注：自由文本输入框。
 
 ### 3.3 成就系统 (Milestones)
@@ -62,6 +64,13 @@
 - 本地图库：内置可维护的车型图片映射库。
 - 导出功能：生成标准格式的 CSV 文件（UTF-8 with BOM 编码），直接保存至安卓文件系统。
 - 海报生成：MVP 阶段预留入口和开发空间，点击提示"功能开发中"，择机开发升级。
+
+### 3.5 设置页字典编辑
+用户可在设置页中对车型字典和客运段字典进行完整的增删改查（CRUD）操作：
+- **车型字典管理**：修改 train_hierarchy 中的 L1/L2/L3/L4 数据（增删改车型、平台、系列、变体）。
+- **客运段字典管理**：修改 railway_bureau 中的局和段数据（增删改局、段）。
+- **数据存储策略**：首次启动时从 JSON 种子文件加载到 ObjectBox 数据库，之后所有操作（读取和编辑）均在数据库上进行，JSON 文件仅作为初始种子数据，不再修改。
+- **选择器联动**：字典编辑后，录入页的 CupertinoPicker 选项实时更新。
 
 ## 4. 数据架构 (Schema-less Thinking)
 使用 JSONB 逻辑存储 Trip 对象：
@@ -87,7 +96,7 @@
 ```
 
 ## 5. 项目路线图 (Roadmap)
-- Phase 1: 搭建 Flutter 基础框架，完成本地数据库 (Isar) 配置，引入 Riverpod 状态管理。
+- Phase 1: 搭建 Flutter 基础框架，完成本地数据库 (ObjectBox) 配置，引入 Riverpod 状态管理。
 - Phase 2: 开发 CupertinoPicker 级联选择器与专业录入表单。
 - Phase 3: 实现全屏仪表盘统计逻辑与历史列表（含编辑功能与组合筛选）。
 - Phase 4: 车型图库集成与成就系统 UI 开发。

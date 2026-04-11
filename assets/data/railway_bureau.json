@@ -1,0 +1,110 @@
+{
+  "哈局": {
+    "sections": [
+      {"name": "哈局哈段", "category": "客运"},
+      {"name": "哈局齐段", "category": "客运"},
+      {"name": "哈局牡段", "category": "客运"}
+    ]
+  },
+  "沈局": {
+    "sections": [
+      {"name": "沈局沈段", "category": "客运"},
+      {"name": "沈局长段", "category": "客运"},
+      {"name": "沈局大段", "category": "客运"}
+    ]
+  },
+  "京局": {
+    "sections": [
+      {"name": "京局京段", "category": "客运"},
+      {"name": "京局津段", "category": "客运"},
+      {"name": "京局石段", "category": "客运"}
+    ]
+  },
+  "太局": {
+    "sections": [
+      {"name": "太局太段", "category": "客运"}
+    ]
+  },
+  "呼局": {
+    "sections": [
+      {"name": "呼局包段", "category": "客运"}
+    ]
+  },
+  "郑局": {
+    "sections": [
+      {"name": "郑局郑段", "category": "客运"}
+    ]
+  },
+  "武局": {
+    "sections": [
+      {"name": "武局武段", "category": "客运"},
+      {"name": "武局襄段", "category": "客运"}
+    ]
+  },
+  "西局": {
+    "sections": [
+      {"name": "西局西段", "category": "客运"}
+    ]
+  },
+  "济局": {
+    "sections": [
+      {"name": "济局济段", "category": "客运"},
+      {"name": "济局青段", "category": "客运"}
+    ]
+  },
+  "上局": {
+    "sections": [
+      {"name": "上局沪段", "category": "客运"},
+      {"name": "上局宁段", "category": "客运"},
+      {"name": "上局杭段", "category": "客运"},
+      {"name": "上局合段", "category": "客运"}
+    ]
+  },
+  "南局": {
+    "sections": [
+      {"name": "南局昌段", "category": "客运"},
+      {"name": "南局福段", "category": "客运"}
+    ]
+  },
+  "广铁": {
+    "sections": [
+      {"name": "广铁广段", "category": "客运"},
+      {"name": "广铁沙段", "category": "客运"},
+      {"name": "广铁九段", "category": "客运"}
+    ]
+  },
+  "宁局": {
+    "sections": [
+      {"name": "宁局南段", "category": "客运"}
+    ]
+  },
+  "成局": {
+    "sections": [
+      {"name": "成局成段", "category": "客运"},
+      {"name": "成局渝段", "category": "客运"},
+      {"name": "成局贵段", "category": "客运"}
+    ]
+  },
+  "昆局": {
+    "sections": [
+      {"name": "昆局昆段", "category": "客运"}
+    ]
+  },
+  "兰局": {
+    "sections": [
+      {"name": "兰局兰段", "category": "客运"},
+      {"name": "兰局银段", "category": "客运"}
+    ]
+  },
+  "乌局": {
+    "sections": [
+      {"name": "乌局乌段", "category": "客运"},
+      {"name": "乌局库段", "category": "客运"}
+    ]
+  },
+  "青藏公司": {
+    "sections": [
+      {"name": "青藏宁段", "category": "客运"}
+    ]
+  }
+}
