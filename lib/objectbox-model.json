@@ -1,0 +1,117 @@
+{
+  "_note1": "KEEP THIS FILE! Check it into a version control system (VCS) like git.",
+  "_note2": "ObjectBox manages crucial IDs for your object model. See docs for details.",
+  "_note3": "If you have VCS merge conflicts, you must resolve them according to ObjectBox docs.",
+  "entities": [
+    {
+      "id": "1:6081960130526898337",
+      "lastPropertyId": "18:6426177717519949256",
+      "name": "Trip",
+      "properties": [
+        {
+          "id": "1:3271823968218708102",
+          "name": "id",
+          "type": 6,
+          "flags": 1
+        },
+        {
+          "id": "2:833008033422000966",
+          "name": "trainNo",
+          "type": 9
+        },
+        {
+          "id": "3:9167964571566880170",
+          "name": "boardStation",
+          "type": 9
+        },
+        {
+          "id": "4:1995894907278946645",
+          "name": "alightStation",
+          "type": 9
+        },
+        {
+          "id": "5:1870405879240513879",
+          "name": "originStation",
+          "type": 9
+        },
+        {
+          "id": "6:4203458901813979873",
+          "name": "destStation",
+          "type": 9
+        },
+        {
+          "id": "7:3450126195387970900",
+          "name": "departureTime",
+          "type": 10
+        },
+        {
+          "id": "8:4492059836529176936",
+          "name": "price",
+          "type": 8
+        },
+        {
+          "id": "9:2987167184175118123",
+          "name": "trainCategoryKey",
+          "type": 9
+        },
+        {
+          "id": "10:1446348425299778026",
+          "name": "trainPlatformKey",
+          "type": 9
+        },
+        {
+          "id": "11:3510166469952034715",
+          "name": "trainSeriesKey",
+          "type": 9
+        },
+        {
+          "id": "12:8298691315894226537",
+          "name": "trainVariant",
+          "type": 9
+        },
+        {
+          "id": "13:2494311643034467425",
+          "name": "bureauKey",
+          "type": 9
+        },
+        {
+          "id": "14:289532781612152040",
+          "name": "sectionName",
+          "type": 9
+        },
+        {
+          "id": "15:7257946501693887664",
+          "name": "seatCategory",
+          "type": 9
+        },
+        {
+          "id": "16:1391274159911297497",
+          "name": "seatType",
+          "type": 9
+        },
+        {
+          "id": "17:808421478790260987",
+          "name": "trainType",
+          "type": 9
+        },
+        {
+          "id": "18:6426177717519949256",
+          "name": "remarks",
+          "type": 9
+        }
+      ],
+      "relations": []
+    }
+  ],
+  "lastEntityId": "1:6081960130526898337",
+  "lastIndexId": "0:0",
+  "lastRelationId": "0:0",
+  "lastSequenceId": "0:0",
+  "modelVersion": 5,
+  "modelVersionParserMinimum": 5,
+  "retiredEntityUids": [],
+  "retiredIndexUids": [],
+  "retiredPropertyUids": [],
+  "retiredRelationUids": [],
+  "version": 1
+}

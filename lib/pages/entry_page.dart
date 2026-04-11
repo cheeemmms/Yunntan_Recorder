@@ -3,7 +3,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../models/railway_bureau.dart';
 import '../models/train_hierarchy.dart';
+import '../models/trip.dart';
 import '../providers/train_data_provider.dart';
+import '../providers/trip_provider.dart';
 import '../widgets/bureau_picker.dart';
 import '../widgets/train_model_picker.dart';
 
@@ -123,7 +125,7 @@ class _EntryPageState extends ConsumerState<EntryPage> {
                   ),
                 ),
                 loading: () => const Center(child: CircularProgressIndicator(strokeWidth: 2)),
-                error: (_, __) => const Text('加载失败'),
+                error: (_, _) => const Text('加载失败'),
               ),
               const SizedBox(height: 12),
               bureauAsync.when(
@@ -138,7 +140,7 @@ class _EntryPageState extends ConsumerState<EntryPage> {
                   ),
                 ),
                 loading: () => const Center(child: CircularProgressIndicator(strokeWidth: 2)),
-                error: (_, __) => const Text('加载失败'),
+                error: (_, _) => const Text('加载失败'),
               ),
             ]),
             const SizedBox(height: 20),
@@ -171,10 +173,42 @@ class _EntryPageState extends ConsumerState<EntryPage> {
             SizedBox(
               width: double.infinity,
               child: FilledButton(
-                onPressed: () {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('保存功能将在第6步实现')),
+                onPressed: () async {
+                  if (_trainNoCtrl.text.trim().isEmpty) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('请输入车次')),
+                    );
+                    return;
+                  }
+
+                  final trip = Trip(
+                    trainNo: _trainNoCtrl.text.trim(),
+                    boardStation: _boardStationCtrl.text.trim(),
+                    alightStation: _alightStationCtrl.text.trim(),
+                    originStation: _originStationCtrl.text.trim(),
+                    destStation: _destStationCtrl.text.trim(),
+                    departureTime: _departureTime,
+                    price: double.tryParse(_priceCtrl.text) ?? 0,
+                    trainCategoryKey: _trainModel?.category.key ?? '',
+                    trainPlatformKey: _trainModel?.platform?.key,
+                    trainSeriesKey: _trainModel?.series?.key,
+                    trainVariant: _trainModel?.variant,
+                    bureauKey: _bureau?.bureauKey,
+                    sectionName: _bureau?.section.name,
+                    seatCategory: _seatCategory,
+                    seatType: _seatType,
+                    trainType: _inferTrainType(_trainNoCtrl.text.trim()),
+                    remarks: _remarksCtrl.text.trim(),
                   );
+
+                  await ref.read(tripListProvider.notifier).addTrip(trip);
+
+                  if (mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('保存成功')),
+                    );
+                    Navigator.pop(context);
+                  }
                 },
                 child: const Text('保存'),
               ),
@@ -274,7 +308,7 @@ class _EntryPageState extends ConsumerState<EntryPage> {
   Widget _buildDropdown(ThemeData theme, String label, String value, List<String> items, void Function(String?) onChanged, {Key? key}) {
     return DropdownButtonFormField<String>(
       key: key,
-      value: value,
+      initialValue: value,
       decoration: InputDecoration(
         labelText: label,
         border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),

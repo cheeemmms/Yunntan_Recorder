@@ -11,7 +11,7 @@
 | | 第 2 步：构建铁路字典 (JSON) | ✅ 已完成 |
 | 第二阶段：核心记录表单 | 第 3 步：级联选择器 UI | 🔶 基本完成（有已知Bug） |
 | | 第 4 步：全字段表单布局 | 🔶 基本完成（与第3步合并） |
-| 第三阶段：本地存储引擎 | 第 5 步：ObjectBox 数据库集成 | ⬜ 未开始 |
+| 第三阶段：本地存储引擎 | 第 5 步：ObjectBox 数据库集成 | ✅ 已完成 |
 | | 第 6 步：数据存取流程闭环 | ⬜ 未开始 |
 | 第四阶段：首页总结与列表 | 第 7 步：全屏仪表盘 Dashboard | ⬜ 未开始 |
 | | 第 8 步：历史记录流与筛选 | ⬜ 未开始 |
@@ -44,19 +44,22 @@
 ### 当前 pubspec.yaml 依赖清单
 
 **运行时依赖：**
-- `flutter_riverpod: ^2.5.0` — 状态管理
+- `flutter_riverpod: ^3.3.1` — 状态管理
 - `flex_color_scheme: ^8.4.0` — Material You 主题（greyLaw 工业风）
 - `json_annotation: ^4.9.0` — JSON 序列化注解
-- `freezed_annotation: ^2.4.0` — 不可变数据类注解
+- `freezed_annotation: ^3.1.0` — 不可变数据类注解
+- `objectbox: ^5.2.0` — NoSQL 本地数据库
+- `objectbox_flutter_libs: ^5.2.0` — ObjectBox Flutter 平台库
+- `path_provider: ^2.1.0` — 应用文档目录路径
 
 **开发依赖：**
-- `freezed: ^2.5.0` — 不可变数据类代码生成
+- `freezed: ^3.2.5` — 不可变数据类代码生成
 - `json_serializable: ^6.8.0` — JSON 序列化代码生成
 - `build_runner: ^2.4.0` — 代码生成工具
+- `objectbox_generator: ^5.2.0` — ObjectBox 代码生成
 
 **暂未引入（后续步骤需要时再添加）：**
-- `objectbox / objectbox_flutter_libs` — 第 5 步 ObjectBox 数据库集成时引入
-- `path_provider` — 第 5 步数据库路径 / 第 11 步 CSV 导出时引入
+- `csv` — 第 11 步 CSV 导出时引入
 
 ### 已解决的问题
 
@@ -71,6 +74,9 @@
 | flex_color_scheme 7.3.1 与 Dart 3.11 不兼容 | 升级到 flex_color_scheme 8.4.0，适配 V8 API 变更 |
 | Isar 3.x 与 Dart 3.11 不兼容 | 改用 ObjectBox 替代 Isar，ObjectBox 完全兼容 Dart 3.11+ |
 | 项目路径中文导致 aapt 报 "Illegal byte sequence" | 已将路径从 `D:\个人文件\...` 迁移为 `D:\Personal_file\...`（纯英文路径） |
+| objectbox_flutter_libs 要求 compileSdk 35 | `build.gradle.kts` 中 compileSdk 从 34 升级到 35 |
+| objectbox.g.dart import 路径错误 | 生成文件在 `lib/` 下，import 路径修正为 `../objectbox.g.dart` |
+| trip_provider 引用 main.dart 全局变量导致循环依赖 | 重构：ObjectBox 初始化合并到 trip_provider.dart，使用 FutureProvider 管理 |
 
 ### 注意事项
 - **用户有科学上网工具**：遇到 Gradle/Maven/Pub 网络问题（SSL 握手失败、下载超时等），只需提醒用户切换代理节点即可，无需配置国内镜像
@@ -78,6 +84,8 @@
 - `build.gradle.kts` 中的 `minSdk = flutter.minSdkVersion` 会被 `flutter` 命令重置，无需反复手动改为 21（新版 Flutter 默认就是 21）
 - Isar 3.x 与当前 Dart SDK 不兼容，已改用 ObjectBox 替代
 - 项目已迁移至纯英文路径 `D:\Personal_file\VibeCoding\Program\Yunntan_Recorder`
+- **ObjectBox 代码生成**：修改 Trip 实体后必须重新运行 `dart run build_runner build`，否则编译会失败
+- **compileSdk 已升级到 35**：objectbox_flutter_libs 要求 SDK 35，`build.gradle.kts` 中 compileSdk = 35
 
 ### 外部终端执行 Flutter 命令的模板
 
@@ -118,6 +126,23 @@ flutter build apk        # 构建 APK
 ---
 
 ## 变更日志
+
+### 2026-04-11 (第十一次更新)
+- 第 5 步 ObjectBox 数据库集成完成，验证通过
+- 新增文件：
+  - `lib/models/trip.dart` — Trip 实体（@Entity + @Id + PropertyType.date，18 个字段）
+  - `lib/providers/trip_provider.dart` — ObjectBoxInstance 单例 + FutureProvider + TripListNotifier（CRUD）
+  - `lib/objectbox.g.dart` — ObjectBox 代码生成（build_runner 自动生成）
+  - `lib/objectbox-model.json` — ObjectBox 模型定义
+- 修改文件：
+  - `pubspec.yaml` — 新增 objectbox ^5.2.0、objectbox_flutter_libs ^5.2.0、path_provider ^2.1.0、objectbox_generator ^5.2.0；riverpod 升级到 ^3.3.1、freezed_annotation 升级到 ^3.1.0、freezed 升级到 ^3.2.5
+  - `android/app/build.gradle.kts` — compileSdk 从 34 升级到 35
+  - `lib/main.dart` — 移除 ObjectBox 手动初始化（改为 FutureProvider 管理），HomePage 显示已保存记录数
+  - `lib/pages/entry_page.dart` — 保存按钮连接数据库写入，车次必填校验
+- 删除文件：
+  - `lib/data/objectbox.dart` — 逻辑合并到 trip_provider.dart
+- design-document.md 升级至 v1.3：仪表盘指标改为年运转次数/总花费金额/已运转车底数量（预留扩展），成就系统领航者改为运转次数勋章
+- implementation-plan.md、handover-notes.md 同步更新
 
 ### 2026-04-11 (第十次更新)
 - 第 3 步级联选择器 UI 基本完成，但存在已知 Bug

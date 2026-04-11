@@ -13,8 +13,8 @@
 | 第 2 步：构建铁路字典 | ✅ | |
 | 第 3 步：级联选择器 UI | 🔶 基本完成 | 有已知 Bug |
 | 第 4 步：全字段表单布局 | 🔶 基本完成 | 与第 3 步合并实现 |
-| 第 5 步：ObjectBox 数据库集成 | ⬜ | 下一步 |
-| 第 6-12 步 | ⬜ | |
+| 第 5 步：ObjectBox 数据库集成 | ✅ | |
+| 第 6 步：数据存取流程闭环 | ⬜ | 下一步 |
 
 ---
 
@@ -27,14 +27,18 @@
 | `assets/data/railway_bureau.json` | 18局客运段数据 |
 | `lib/models/train_hierarchy.dart` | TrainCategory/TrainPlatform/TrainSeries/TrainHierarchy |
 | `lib/models/railway_bureau.dart` | BureauSection/RailwayBureau/RailwayBureauData |
+| `lib/models/trip.dart` | Trip 实体（ObjectBox @Entity，18 个字段） |
 | `lib/data/train_data_loader.dart` | JSON 加载服务（rootBundle + jsonDecode） |
-| `lib/providers/train_data_provider.dart` | Riverpod AsyncNotifierProvider |
+| `lib/providers/train_data_provider.dart` | Riverpod AsyncNotifierProvider（字典数据） |
+| `lib/providers/trip_provider.dart` | ObjectBoxInstance + FutureProvider + TripListNotifier（CRUD） |
+| `lib/objectbox.g.dart` | ObjectBox 代码生成（build_runner 自动生成） |
+| `lib/objectbox-model.json` | ObjectBox 模型定义 |
 
 ### UI 层
 | 文件 | 说明 |
 |------|------|
-| `lib/main.dart` | 入口：BottomNav + FAB → EntryPage |
-| `lib/pages/entry_page.dart` | 录入表单（12+ 字段） |
+| `lib/main.dart` | 入口：BottomNav + FAB → EntryPage，首页显示已保存记录数 |
+| `lib/pages/entry_page.dart` | 录入表单（12+ 字段），保存按钮连接数据库写入 |
 | `lib/widgets/train_model_picker.dart` | 4级级联车型选择器（CupertinoPicker） |
 | `lib/widgets/bureau_picker.dart` | 2级级联担当选择器（CupertinoPicker） |
 
@@ -139,18 +143,27 @@ List<String> _filteredSeatTypes(String category) {
 - 出发时间 DatePicker + TimePicker
 - EMU 席位过滤正常
 
+### 数据库 (trip_provider.dart)
+- ObjectBox 初始化正常（FutureProvider 管理，无循环依赖）
+- 保存功能正常：填写表单 → 保存 → 返回首页 → 计数更新
+- 数据持久化正常：杀死 App → 重启 → 数据仍在
+- CRUD 方法已实现：addTrip / updateTrip / deleteTrip
+
 ---
 
-## 下一步计划：第 5 步 ObjectBox 数据库集成
+## 下一步计划：第 6 步 数据存取流程闭环
 
 ### 需要做的事情
-1. 添加 ObjectBox 依赖到 pubspec.yaml
-2. 创建 Trip 实体模型（字段与表单一一对应）
-3. 运行 `flutter pub run build_runner build` 生成 ObjectBox 代码
-4. 初始化 ObjectBox Store（单例模式）
-5. 创建 Repository 层封装 CRUD
-6. 连接 EntryPage 的保存按钮到数据库写入
-7. 验证：保存 → 重启 → 数据仍在
+1. 实现历史记录列表展示（首页下滑展示已保存记录卡片）
+2. 卡片内容：车次、日期、区间、车型、席位
+3. 编辑功能：点击历史记录卡片进入录入页，预填充已有数据，保存时更新而非新建
+4. 删除功能：长按或滑动删除记录
+5. 使用 Riverpod 的 AsyncNotifierProvider 管理数据状态，确保 UI 自动响应数据变化
+
+### 关键设计点
+- 编辑模式：EntryPage 需支持接收 Trip 参数，预填充所有字段
+- 保存逻辑：有 id 则更新（put），无 id 则新建
+- 数据库路径：`应用文档目录/train-ledger/`
 
 ### Trip 模型字段规划
 | 字段 | 类型 | 说明 |
@@ -162,7 +175,7 @@ List<String> _filteredSeatTypes(String category) {
 | originStation | String | 始发站 |
 | destStation | String | 终到站 |
 | departureTime | DateTime | 出发时间 |
-| price | double | 票价 |
+| price | double | 票价（仪表盘"总花费金额"统计源） |
 | trainCategoryKey | String | 车型 L1 key |
 | trainPlatformKey | String? | 车型 L2 key |
 | trainSeriesKey | String? | 车型 L3 key |
@@ -172,6 +185,14 @@ List<String> _filteredSeatTypes(String category) {
 | seatCategory | String | 席位类别（坐席/卧席） |
 | seatType | String | 席位类型 |
 | remarks | String | 备注 |
+
+### 仪表盘设计变更（v1.3）
+- 原"总运转里程"已移除（MVP 不记录里程字段）
+- 原"总运转次数"改为"年运转次数"（当前年份的运转次数）
+- 新增"总花费金额"（所有记录的票价累计，单位：元）
+- "已运转车底数量"保持不变
+- 仪表盘采用可扩展卡片式布局，预留后续新增统计维度的开发空间
+- 成就系统"领航者"从里程勋章改为运转次数勋章（1/10/50/100/200/500/1000/5000 次），里程勋章预留后续扩展
 
 ---
 

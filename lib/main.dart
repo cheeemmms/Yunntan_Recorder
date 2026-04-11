@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'pages/entry_page.dart';
+import 'providers/trip_provider.dart';
 
 void main() {
   runApp(const ProviderScope(child: TrainLedgerApp()));
@@ -98,6 +99,7 @@ class HomePage extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
+    final tripListAsync = ref.watch(tripListProvider);
 
     return Scaffold(
       appBar: AppBar(title: const Text('Train Ledger')),
@@ -122,6 +124,22 @@ class HomePage extends ConsumerWidget {
               ),
             ),
             const SizedBox(height: 24),
+            tripListAsync.when(
+              data: (trips) => Text(
+                '已保存 ${trips.length} 条运转记录',
+                style: theme.textTheme.bodyMedium?.copyWith(
+                  color: theme.colorScheme.onSurfaceVariant,
+                ),
+              ),
+              loading: () => const CircularProgressIndicator(strokeWidth: 2),
+              error: (_, _) => Text(
+                '数据库加载失败',
+                style: theme.textTheme.bodyMedium?.copyWith(
+                  color: theme.colorScheme.error,
+                ),
+              ),
+            ),
+            const SizedBox(height: 8),
             Text(
               '点击 + 开始录入运转',
               style: theme.textTheme.bodyMedium?.copyWith(
