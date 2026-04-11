@@ -2,7 +2,7 @@ import 'package:flex_color_scheme/flex_color_scheme.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import 'providers/train_data_provider.dart';
+import 'pages/entry_page.dart';
 
 void main() {
   runApp(const ProviderScope(child: TrainLedgerApp()));
@@ -47,7 +47,47 @@ class TrainLedgerApp extends StatelessWidget {
         fontFamily: 'Roboto',
       ),
       themeMode: ThemeMode.system,
-      home: const HomePage(),
+      home: const MainShell(),
+    );
+  }
+}
+
+class MainShell extends StatefulWidget {
+  const MainShell({super.key});
+
+  @override
+  State<MainShell> createState() => _MainShellState();
+}
+
+class _MainShellState extends State<MainShell> {
+  int _currentIndex = 0;
+
+  static const _pages = <Widget>[
+    HomePage(),
+    Center(child: Text('成就系统（待开发）')),
+    Center(child: Text('设置（待开发）')),
+  ];
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: _pages[_currentIndex],
+      floatingActionButton: FloatingActionButton(
+        onPressed: () => Navigator.push(
+          context,
+          MaterialPageRoute(builder: (_) => const EntryPage()),
+        ),
+        child: const Icon(Icons.add),
+      ),
+      bottomNavigationBar: NavigationBar(
+        selectedIndex: _currentIndex,
+        onDestinationSelected: (i) => setState(() => _currentIndex = i),
+        destinations: const [
+          NavigationDestination(icon: Icon(Icons.home), label: '首页'),
+          NavigationDestination(icon: Icon(Icons.emoji_events), label: '成就'),
+          NavigationDestination(icon: Icon(Icons.settings), label: '设置'),
+        ],
+      ),
     );
   }
 }
@@ -58,19 +98,14 @@ class HomePage extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
-    final hierarchyAsync = ref.watch(trainHierarchyProvider);
-    final bureauAsync = ref.watch(railwayBureauProvider);
 
     return Scaffold(
+      appBar: AppBar(title: const Text('Train Ledger')),
       body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(
-              Icons.train,
-              size: 72,
-              color: theme.colorScheme.primary,
-            ),
+            Icon(Icons.train, size: 72, color: theme.colorScheme.primary),
             const SizedBox(height: 24),
             Text(
               'Hello Ledger',
@@ -87,40 +122,10 @@ class HomePage extends ConsumerWidget {
               ),
             ),
             const SizedBox(height: 24),
-            hierarchyAsync.when(
-              data: (hierarchy) => Text(
-                '车型字典: ${hierarchy.categories.length} 大类, '
-                '${hierarchy.availableCategories.length} 可用',
-                style: theme.textTheme.bodyMedium?.copyWith(
-                  color: theme.colorScheme.onSurfaceVariant,
-                ),
-              ),
-              loading: () => const SizedBox(
-                width: 16,
-                height: 16,
-                child: CircularProgressIndicator(strokeWidth: 2),
-              ),
-              error: (e, _) => Text(
-                '车型字典加载失败: $e',
-                style: TextStyle(color: theme.colorScheme.error),
-              ),
-            ),
-            const SizedBox(height: 4),
-            bureauAsync.when(
-              data: (bureau) => Text(
-                '局段字典: ${bureau.bureaus.length} 局',
-                style: theme.textTheme.bodyMedium?.copyWith(
-                  color: theme.colorScheme.onSurfaceVariant,
-                ),
-              ),
-              loading: () => const SizedBox(
-                width: 16,
-                height: 16,
-                child: CircularProgressIndicator(strokeWidth: 2),
-              ),
-              error: (e, _) => Text(
-                '局段字典加载失败: $e',
-                style: TextStyle(color: theme.colorScheme.error),
+            Text(
+              '点击 + 开始录入运转',
+              style: theme.textTheme.bodyMedium?.copyWith(
+                color: theme.colorScheme.onSurfaceVariant,
               ),
             ),
           ],
