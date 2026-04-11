@@ -119,6 +119,16 @@ flutter build apk        # 构建 APK
 
 ## 变更日志
 
+### 2026-04-11 (第十次更新)
+- 第 3 步级联选择器 UI 基本完成，但存在已知 Bug
+- train_model_picker.dart: 4级级联（L1类别→L2平台→L3系列→L4变体），L4含"无"选项
+- bureau_picker.dart: 2级级联（局→客运段）
+- entry_page.dart: 录入表单，含车型选择、担当选择、席位选择
+- **已知 Bug（席位过滤）**：车底选为 EMU 时席位过滤正常（不显示硬座/软座/硬卧/软卧），但选为 Coach（普速）时坐席和卧席仍显示 EMU 类别（二等座/一等座/商务座/二等卧/一等卧/高级软卧未隐藏）
+  - 已尝试：`_filteredSeatTypes()` 逻辑正确、`ValueKey` 强制重建 `DropdownButtonFormField`、`onConfirm` 回调中重置 `_seatType`
+  - 根因推测：`DropdownButtonFormField` 在 `setState` 后未完全重建 items 列表，可能需要换用其他控件（如自定义 Chip 组）来替代
+  - 优先级：中（功能可用但不完整，后续迭代修复）
+
 ### 2026-04-11 (第九次更新)
 - 第 2 步验证通过：深层级联数据解析正确
   - CR→CR400→AF: selectable=true, variants=11个
