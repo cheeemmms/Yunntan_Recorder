@@ -100,21 +100,25 @@ flutter build apk        # 构建 APK
 - [x] 车型级联数据结构确认为 4 级（L1→L2→L3→L4），L3 可选即止，L4 为可选变体
 - [x] CR（复兴号系列）数据已录入：CR450、CR400、CR300、CR220J、CR200J(1.0/2.0/3.0)
 - [x] CRH（和谐号系列）数据已录入：CRH380、CRH1、CRH2、CRH3、CRH5、CRH6
-- [x] `assets/data/train_hierarchy.json` 已创建
+- [x] Coach（普速客车车底）数据已录入：25G、25K、25T、25B（单层级，选 L2 即为最终型号）
+- [x] HXD/SS/DF_HXN（本务机车）已预留占位，标记 `developing: true`，前端点击时 toast 提示"功能开发中"
+- [x] `assets/data/train_hierarchy.json` 已更新（含 CR + CRH + Coach + 机车占位）
 - [x] `pubspec.yaml` 已添加 `assets/data/` 声明
 
 ### 待完成
-1. [ ] HXD（和谐型电力机车）数据录入
-2. [ ] SS（韶山系列机车）数据录入
-3. [ ] DF/HXN（内燃机车系列）数据录入
-4. [ ] Coach（普速客车车底）数据录入
-5. [ ] `railway_bureau.json`（18 局字典）编写
-6. [ ] 编写数据加载与解析代码（`lib/data/`）
-7. [ ] 验证测试：确认 JSON 解析正确，级联数据可索引
+1. [ ] `railway_bureau.json`（18 局字典）编写
+2. [ ] 编写数据加载与解析代码（`lib/data/`）
+3. [ ] 验证测试：确认 JSON 解析正确，级联数据可索引
 
 ---
 
 ## 变更日志
+
+### 2026-04-11 (第六次更新)
+- Coach（普速客车车底）数据录入：25G、25K、25T、25B（单层级结构）
+- HXD/SS/DF_HXN（本务机车）暂时搁置，JSON 中预留占位并标记 `developing: true`
+- 前端选择器中机车入口保留，点击时 toast 提示"功能开发中"
+- `train_hierarchy.json` 更新为完整版（CR + CRH + Coach + 机车占位）
 
 ### 2026-04-11 (第五次更新)
 - 开始第 2 步：构建铁路字典

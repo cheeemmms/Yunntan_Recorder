@@ -260,5 +260,45 @@
         }
       }
     }
+  },
+  "Coach": {
+    "label": "普速客车车底",
+    "type": "Coach",
+    "platforms": {
+      "25G": {
+        "label": "25G",
+        "series": {}
+      },
+      "25K": {
+        "label": "25K",
+        "series": {}
+      },
+      "25T": {
+        "label": "25T",
+        "series": {}
+      },
+      "25B": {
+        "label": "25B",
+        "series": {}
+      }
+    }
+  },
+  "HXD": {
+    "label": "和谐型电力机车",
+    "type": "Loco",
+    "developing": true,
+    "platforms": {}
+  },
+  "SS": {
+    "label": "韶山系列机车",
+    "type": "Loco",
+    "developing": true,
+    "platforms": {}
+  },
+  "DF_HXN": {
+    "label": "内燃机车系列",
+    "type": "Loco",
+    "developing": true,
+    "platforms": {}
   }
 }
