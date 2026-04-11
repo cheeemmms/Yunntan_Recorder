@@ -1,0 +1,264 @@
+{
+  "CR": {
+    "label": "复兴号系列",
+    "type": "EMU",
+    "platforms": {
+      "CR450": {
+        "label": "CR450",
+        "series": {
+          "AF": {
+            "label": "CR450AF",
+            "selectable": true,
+            "variants": []
+          },
+          "BF": {
+            "label": "CR450BF",
+            "selectable": true,
+            "variants": []
+          }
+        }
+      },
+      "CR400": {
+        "label": "CR400",
+        "series": {
+          "AF": {
+            "label": "CR400AF",
+            "selectable": true,
+            "variants": ["A", "B", "C", "G", "Z", "AZ", "BZ", "S", "AS", "BS", "AE"]
+          },
+          "BF": {
+            "label": "CR400BF",
+            "selectable": true,
+            "variants": ["A", "B", "G", "C", "Z", "AZ", "BZ", "GZ", "S", "AS", "BS", "GS"]
+          }
+        }
+      },
+      "CR300": {
+        "label": "CR300",
+        "series": {
+          "AF": {
+            "label": "CR300AF",
+            "selectable": true,
+            "variants": ["H"]
+          },
+          "BF": {
+            "label": "CR300BF",
+            "selectable": true,
+            "variants": ["H"]
+          }
+        }
+      },
+      "CR220J": {
+        "label": "CR220J",
+        "series": {
+          "1": {
+            "label": "CR220J1",
+            "selectable": true,
+            "variants": []
+          },
+          "3": {
+            "label": "CR220J3",
+            "selectable": true,
+            "variants": []
+          }
+        }
+      },
+      "CR200J-1": {
+        "label": "CR200J(1.0)",
+        "series": {
+          "1-A": {
+            "label": "CR200J1-A",
+            "selectable": true,
+            "variants": []
+          },
+          "2-A": {
+            "label": "CR200J2-A",
+            "selectable": true,
+            "variants": []
+          },
+          "3-A": {
+            "label": "CR200J3-A",
+            "selectable": true,
+            "variants": []
+          }
+        }
+      },
+      "CR200J-2": {
+        "label": "CR200J(2.0)",
+        "series": {
+          "1-B": {
+            "label": "CR200J1-B",
+            "selectable": true,
+            "variants": []
+          },
+          "2-B": {
+            "label": "CR200J2-B",
+            "selectable": true,
+            "variants": []
+          },
+          "3-B": {
+            "label": "CR200J3-B",
+            "selectable": true,
+            "variants": []
+          },
+          "S-G": {
+            "label": "CR200JS-G",
+            "selectable": true,
+            "variants": []
+          }
+        }
+      },
+      "CR200J-3": {
+        "label": "CR200J(3.0)",
+        "series": {
+          "1-C": {
+            "label": "CR200J1-C",
+            "selectable": true,
+            "variants": []
+          },
+          "1-D": {
+            "label": "CR200J1-D",
+            "selectable": true,
+            "variants": []
+          },
+          "2-C": {
+            "label": "CR200J2-C",
+            "selectable": true,
+            "variants": []
+          },
+          "3-C": {
+            "label": "CR200J3-C",
+            "selectable": true,
+            "variants": []
+          }
+        }
+      }
+    }
+  },
+  "CRH": {
+    "label": "和谐号系列",
+    "type": "EMU",
+    "platforms": {
+      "CRH380": {
+        "label": "CRH380",
+        "series": {
+          "A": {
+            "label": "CRH380A",
+            "selectable": true,
+            "variants": ["J", "L", "N"]
+          },
+          "B": {
+            "label": "CRH380B",
+            "selectable": true,
+            "variants": ["G", "L"]
+          },
+          "CL": {
+            "label": "CRH380CL",
+            "selectable": true,
+            "variants": []
+          },
+          "D": {
+            "label": "CRH380D",
+            "selectable": true,
+            "variants": []
+          }
+        }
+      },
+      "CRH1": {
+        "label": "CRH1",
+        "series": {
+          "A": {
+            "label": "CRH1A",
+            "selectable": true,
+            "variants": []
+          },
+          "B": {
+            "label": "CRH1B",
+            "selectable": true,
+            "variants": []
+          },
+          "E": {
+            "label": "CRH1E",
+            "selectable": true,
+            "variants": []
+          }
+        }
+      },
+      "CRH2": {
+        "label": "CRH2",
+        "series": {
+          "A": {
+            "label": "CRH2A",
+            "selectable": true,
+            "variants": []
+          },
+          "B": {
+            "label": "CRH2B",
+            "selectable": true,
+            "variants": []
+          },
+          "E": {
+            "label": "CRH2E",
+            "selectable": true,
+            "variants": []
+          },
+          "C": {
+            "label": "CRH2C",
+            "selectable": true,
+            "variants": []
+          },
+          "NG": {
+            "label": "CRH2NG",
+            "selectable": true,
+            "variants": []
+          }
+        }
+      },
+      "CRH3": {
+        "label": "CRH3",
+        "series": {
+          "C": {
+            "label": "CRH3C",
+            "selectable": true,
+            "variants": []
+          },
+          "A": {
+            "label": "CRH3A",
+            "selectable": true,
+            "variants": []
+          }
+        }
+      },
+      "CRH5": {
+        "label": "CRH5",
+        "series": {
+          "A": {
+            "label": "CRH5A",
+            "selectable": true,
+            "variants": []
+          },
+          "G": {
+            "label": "CRH5G",
+            "selectable": true,
+            "variants": []
+          },
+          "E": {
+            "label": "CRH5E",
+            "selectable": true,
+            "variants": []
+          }
+        }
+      },
+      "CRH6": {
+        "label": "CRH6",
+        "series": {
+          "A": {
+            "label": "CRH6A",
+            "selectable": true,
+            "variants": []
+          }
+        }
+      }
+    }
+  }
+}

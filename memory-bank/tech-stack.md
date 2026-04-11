@@ -15,9 +15,10 @@
   - **用法**: 使用 AsyncNotifierProvider 管理数据库状态，确保 UI 自动响应数据变化。
 
 ## 3. 数据持久化 (Data Storage)
-- **Isar Database (NoSQL)**:
-  - **理由**: Flutter 生态中最快的本地 NoSQL 数据库。它原生支持 Dart 对象存储，完美契合 Schema-less 思维，方便后期随时增加"运行图"、"天气"等扩展字段。
-  - **特性**: 支持异步操作，查询性能极高，非常适合处理成千上万条记录。
+- **ObjectBox (NoSQL)**:
+  - **理由**: Flutter 生态中高性能的本地 NoSQL 数据库，完全兼容 Dart 3.11+。原生支持 Dart 对象存储，契合 Schema-less 思维，方便后期随时增加"运行图"、"天气"等扩展字段。
+  - **特性**: 支持异步操作，查询性能极高，非常适合处理成千上万条记录。自带对象关系支持，无需手写 SQL Schema。
+  - **替代背景**: 原计划使用 Isar，但 Isar 3.x 与 Dart 3.11 不兼容，Isar 4.x 尚未发布，因此改用 ObjectBox。
 
 ## 4. UI 与交互设计 (UI & Interaction)
 - **Material 3 (Material You)**:
@@ -32,7 +33,7 @@
 ## 5. 核心逻辑与实用库 (Utilities)
 - **数据模型解析**: json_serializable & freezed (用于处理复杂的 train_hierarchy.json 级联结构)。
 - **文件操作**: path_provider (访问安卓文件系统) & permission_handler (权限管理)。
-- **导出功能**: csv (将 Isar 数据库内容转换为标准 CSV 格式，编码使用 UTF-8 with BOM)。
+- **导出功能**: csv (将 ObjectBox 数据库内容转换为标准 CSV 格式，编码使用 UTF-8 with BOM)。
 - **图像处理**: cached_network_image 或本地 Image.asset (用于展示车型图库)。
 
 ## 6. 开发环境与工具 (Environment)

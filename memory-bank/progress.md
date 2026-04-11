@@ -7,11 +7,11 @@
 
 | 阶段 | 步骤 | 状态 |
 |------|------|------|
-| 第一阶段：项目地基与静态字典 | 第 1 步：Flutter 环境初始化 | 🔧 进行中（卡住） |
-| | 第 2 步：构建铁路字典 (JSON) | ⬜ 未开始 |
+| 第一阶段：项目地基与静态字典 | 第 1 步：Flutter 环境初始化 | ✅ 已完成 |
+| | 第 2 步：构建铁路字典 (JSON) | 🔧 进行中 |
 | 第二阶段：核心记录表单 | 第 3 步：三级级联选择器 UI | ⬜ 未开始 |
 | | 第 4 步：全字段表单布局 | ⬜ 未开始 |
-| 第三阶段：本地存储引擎 | 第 5 步：Isar 数据库集成 | ⬜ 未开始 |
+| 第三阶段：本地存储引擎 | 第 5 步：ObjectBox 数据库集成 | ⬜ 未开始 |
 | | 第 6 步：数据存取流程闭环 | ⬜ 未开始 |
 | 第四阶段：首页总结与列表 | 第 7 步：全屏仪表盘 Dashboard | ⬜ 未开始 |
 | | 第 8 步：历史记录流与筛选 | ⬜ 未开始 |
@@ -25,96 +25,130 @@
 ## 第 1 步详细状态：Flutter 环境初始化
 
 ### 已完成
-- [x] Flutter SDK 已安装在 `D:\Software\Flutter SDK\flutter\`（已确认 bin 目录存在）
-- [x] Flutter 已添加到系统 PATH（通过刷新环境变量后 `where.exe flutter` 可找到）
-- [x] GitHub CLI 已安装在 `D:\Software\GitHub Cli\gh.exe`，已登录账号 cheeemmms
+- [x] Flutter SDK 已安装并迁移至 `D:\Software\Flutter-SDK\flutter\`（已解决路径空格问题）
+- [x] GitHub CLI 已安装，已登录账号 cheeemmms
+- [x] Flutter 项目已创建：`flutter create . --project-name train_ledger --org com.yunntan --platforms android`
+- [x] Android SDK 版本已配置：compileSdk = 34, targetSdk = 34（minSdk 使用 flutter.minSdkVersion，新版 Flutter 默认为 21）
+- [x] 核心依赖已添加到 `pubspec.yaml`（见下方依赖清单）
+- [x] 项目目录结构已建立：lib/models, lib/providers, lib/pages, lib/widgets, lib/utils, lib/data, assets/data
+- [x] `lib/main.dart` 已替换为 Riverpod + FlexColorScheme 8.4.0 (greyLaw 工业风) + Material You 应用
+- [x] 测试文件已更新为 Hello Ledger smoke test
+- [x] `android/gradle.properties` 已添加 `android.overridePathCheck=true`
+- [x] APK 构建成功（`flutter build` 通过）
 
-### 卡住的问题
-- **沙箱环境中 `flutter` 命令无法正常执行**：在 Trae IDE 的沙箱终端中运行 `flutter --version` 会卡住/超时，退出码 -1073741510。可能原因：
-  1. 路径中包含空格（`Flutter SDK`）导致沙箱执行异常
-  2. Flutter 首次运行需要下载 Dart SDK 或执行初始化，耗时较长被沙箱超时终止
-  3. 沙箱环境对某些进程启动有限制
+### 待完成（按顺序）
+1. [x] **在真机上验证运行**：执行 `flutter clean && flutter pub get && flutter run`，确认在真机上显示 "Hello Ledger" 页面
+2. [x] 验证通过后，更新 progress.md 第 1 步状态为 ✅
+3. [ ] 提交 Git 并推送
 
-### 下一步需要做的事（按顺序）
+### 当前 pubspec.yaml 依赖清单
 
-1. **在 Trae IDE 外部验证 Flutter**：请在 Windows 终端（非 Trae 沙箱）中运行 `flutter doctor`，确认 Flutter 和 Android SDK 状态正常。如果 `flutter doctor` 报错，先解决报错。
+**运行时依赖：**
+- `flutter_riverpod: ^2.5.0` — 状态管理
+- `flex_color_scheme: ^8.4.0` — Material You 主题（greyLaw 工业风）
+- `json_annotation: ^4.9.0` — JSON 序列化注解
+- `freezed_annotation: ^2.4.0` — 不可变数据类注解
 
-2. **确认 Android SDK 是否可用**：运行 `flutter doctor` 检查 Android toolchain 是否就绪。如果没有 Android SDK：
-   - 方案 A：安装 Android Studio（最完整，自带 SDK + 模拟器）
-   - 方案 B：仅安装 Android SDK command-line tools + 用真机调试
-   - 无论哪种方案，都需要 SDK Platform 34 和 Build-Tools 34
+**开发依赖：**
+- `freezed: ^2.5.0` — 不可变数据类代码生成
+- `json_serializable: ^6.8.0` — JSON 序列化代码生成
+- `build_runner: ^2.4.0` — 代码生成工具
 
-3. **在 Trae 沙箱中解决 Flutter 执行问题**（可能的方案）：
-   - 尝试将 Flutter SDK 移到无空格路径（如 `D:\Flutter`），然后更新 PATH
-   - 或者在 Trae 设置中配置沙箱允许 Flutter 执行
-   - 或者直接在 Trae 外部终端执行 `flutter create` 等命令
+**暂未引入（后续步骤需要时再添加）：**
+- `objectbox / objectbox_flutter_libs` — 第 5 步 ObjectBox 数据库集成时引入
+- `path_provider` — 第 5 步数据库路径 / 第 11 步 CSV 导出时引入
 
-4. **创建 Flutter 项目**：
-   ```powershell
-   cd "D:\个人文件\VibeCoding\Program\Yunntan_Recorder"
-   flutter create . --project-name train_ledger --org com.yunntan --platforms android
-   ```
-   注意：在已有文件的目录中执行 `flutter create .` 会保留现有文件（如 memory-bank/、.gitignore）。
+### 已解决的问题
 
-5. **配置 Android SDK 版本**：
-   - 修改 `android/app/build.gradle`：
-     - `minSdkVersion 21`
-     - `targetSdkVersion 34`
-     - `compileSdkVersion 34`
-
-6. **引入核心依赖**（在 `pubspec.yaml` 中添加）：
-   ```yaml
-   dependencies:
-     flutter_riverpod: ^2.5.0
-     isar: ^3.1.0
-     isar_flutter_libs: ^3.1.0
-     flex_color_scheme: ^7.3.1
-     path_provider: ^2.1.0
-     json_annotation: ^4.9.0
-
-   dev_dependencies:
-     freezed: ^2.5.0
-     freezed_annotation: ^2.4.0
-     json_serializable: ^6.8.0
-     build_runner: ^2.4.0
-     isar_generator: ^3.1.0
-   ```
-   然后运行 `flutter pub get`。
-
-7. **建立项目目录结构**（在 `lib/` 下）：
-   ```
-   lib/
-   ├── models/
-   ├── providers/
-   ├── pages/
-   ├── widgets/
-   ├── utils/
-   └── data/
-   ```
-
-8. **清理默认代码，实现 Hello Ledger 页面**：
-   - 替换 `lib/main.dart` 为最简 Riverpod + Material You 应用
-   - 使用 `ProviderScope` 包裹根 widget
-   - 使用 `MaterialApp` + `FlexColorScheme` 配置工业风主题
-   - 首页显示 "Hello Ledger" 文字
-
-9. **验证测试**：在安卓模拟器或真机上运行 `flutter run`，确认显示 "Hello Ledger" 页面。
-
-10. **验证通过后**：
-    - 更新 progress.md（第 1 步状态改为 ✅）
-    - 更新 architecture.md（记录项目目录结构和架构决策）
-    - 提交 Git 并推送
+| 问题 | 解决方案 |
+|------|----------|
+| Trae 沙箱无法执行 Flutter 命令 | 分工模式：用户在外部终端执行 Flutter 命令，Trae 负责代码编写 |
+| Flutter SDK 路径含空格 (`Flutter SDK`) | 迁移至 `D:\Software\Flutter-SDK\flutter\` |
+| 系统 PATH 未包含 Flutter | 外部终端手动设置 `$env:PATH` |
+| Gradle kotlin-dsl 5.2.0 插件找不到 | 网络问题，切换科学上网代理节点解决 |
+| Gradle SSL 握手失败 / 下载超时 | 切换科学上网代理节点解决 |
+| 项目路径含非 ASCII 字符导致 Gradle 报错 | 添加 `android.overridePathCheck=true` 到 gradle.properties |
+| flex_color_scheme 7.3.1 与 Dart 3.11 不兼容 | 升级到 flex_color_scheme 8.4.0，适配 V8 API 变更 |
+| Isar 3.x 与 Dart 3.11 不兼容 | 改用 ObjectBox 替代 Isar，ObjectBox 完全兼容 Dart 3.11+ |
+| 项目路径中文导致 aapt 报 "Illegal byte sequence" | 已将路径从 `D:\个人文件\...` 迁移为 `D:\Personal_file\...`（纯英文路径） |
 
 ### 注意事项
-- Isar 3.x 需要配合 `isar_generator` 和 `build_runner`，后续第 5 步才会用到，第 1 步只需引入依赖
-- 路径中有空格（`Flutter SDK`）是潜在问题源，建议迁移到无空格路径
-- Expo Go 是 React Native 工具，与 Flutter 不兼容，本项目不需要
+- **用户有科学上网工具**：遇到 Gradle/Maven/Pub 网络问题（SSL 握手失败、下载超时等），只需提醒用户切换代理节点即可，无需配置国内镜像
+- Flutter 命令需在外部终端执行（设置 PATH 后）
+- `build.gradle.kts` 中的 `minSdk = flutter.minSdkVersion` 会被 `flutter` 命令重置，无需反复手动改为 21（新版 Flutter 默认就是 21）
+- Isar 3.x 与当前 Dart SDK 不兼容，已改用 ObjectBox 替代
+- 项目已迁移至纯英文路径 `D:\Personal_file\VibeCoding\Program\Yunntan_Recorder`
+
+### 外部终端执行 Flutter 命令的模板
+
+```powershell
+# 设置 PATH 并进入项目目录
+$env:PATH = "D:\Software\Flutter-SDK\flutter\bin;" + $env:PATH; cd "D:\Personal_file\VibeCoding\Program\Yunntan_Recorder"
+
+# 常用命令
+flutter pub get          # 拉取依赖
+flutter run              # 运行到设备
+flutter clean            # 清理构建缓存
+flutter build apk        # 构建 APK
+```
+
+---
+
+## 第 2 步详细状态：构建铁路字典 (JSON)
+
+### 已完成
+- [x] 车型级联数据结构确认为 4 级（L1→L2→L3→L4），L3 可选即止，L4 为可选变体
+- [x] CR（复兴号系列）数据已录入：CR450、CR400、CR300、CR220J、CR200J(1.0/2.0/3.0)
+- [x] CRH（和谐号系列）数据已录入：CRH380、CRH1、CRH2、CRH3、CRH5、CRH6
+- [x] `assets/data/train_hierarchy.json` 已创建
+- [x] `pubspec.yaml` 已添加 `assets/data/` 声明
+
+### 待完成
+1. [ ] HXD（和谐型电力机车）数据录入
+2. [ ] SS（韶山系列机车）数据录入
+3. [ ] DF/HXN（内燃机车系列）数据录入
+4. [ ] Coach（普速客车车底）数据录入
+5. [ ] `railway_bureau.json`（18 局字典）编写
+6. [ ] 编写数据加载与解析代码（`lib/data/`）
+7. [ ] 验证测试：确认 JSON 解析正确，级联数据可索引
 
 ---
 
 ## 变更日志
 
-### 2026-04-11
+### 2026-04-11 (第五次更新)
+- 开始第 2 步：构建铁路字典
+- 车型级联数据结构从原计划 3 级调整为 4 级（L1→L2→L3→L4），L3 可选即止，L4 为可选变体
+- CR（复兴号系列）数据录入完成：CR450、CR400、CR300、CR220J、CR200J(1.0/2.0/3.0)
+- CRH（和谐号系列）数据录入完成：CRH380、CRH1、CRH2、CRH3、CRH5、CRH6
+- `assets/data/train_hierarchy.json` 已创建（暂含 CR + CRH）
+- `pubspec.yaml` 已添加 `assets/data/` 声明
+- HXD/SS/DF-HXN/Coach 及 railway_bureau.json 待后续补充
+
+### 2026-04-11 (第四次更新)
+- 项目路径已从 `D:\个人文件\VibeCoding\Program\Yunntan_Recorder` 迁移为 `D:\Personal_file\VibeCoding\Program\Yunntan_Recorder`（纯英文路径，解决 aapt 报错问题）
+- 数据库方案从 Isar 改为 ObjectBox（Isar 3.x 与 Dart 3.11 不兼容，ObjectBox 完全兼容）
+- 同步更新 tech-stack.md、architecture.md、progress.md 中的相关内容
+
+### 2026-04-11 (第三次更新)
+- 发现项目路径中文导致 `aapt` 工具报 "Illegal byte sequence"，APK 无法安装到设备
+- 需要将项目从 `D:\个人文件\VibeCoding\Program\Yunntan_Recorder` 迁移到 `D:\Projects\Yunntan_Recorder`
+- 升级 flex_color_scheme 从 7.3.1 到 8.4.0，适配 V8 API（移除 appBarStyle、blendOnColors、visualDensity；显式设置 interactionEffects 和 tintedDisabledControls）
+- 移除 Isar 相关依赖（isar、isar_flutter_libs、isar_generator、path_provider），因与 Dart 3.11 不兼容
+- 移除 assets/data/ 声明（避免空目录资源打包警告）
+- 添加 `android.overridePathCheck=true` 到 gradle.properties
+- APK 构建成功，但安装失败（路径中文问题）
+
+### 2026-04-11 (第二次更新)
+- Flutter SDK 迁移至 `D:\Software\Flutter-SDK\flutter\`（解决路径空格问题）
+- Flutter 项目创建成功
+- Android SDK 版本配置完成（minSdk 21 / targetSdk 34 / compileSdk 34）
+- 核心依赖添加到 pubspec.yaml
+- 项目目录结构建立（lib/models, providers, pages, widgets, utils, data, assets/data）
+- main.dart 替换为 Riverpod + FlexColorScheme (greyLaw) + Material You Hello Ledger 页面
+- 测试文件更新
+
+### 2026-04-11 (初始)
 - 项目初始化：创建 memory-bank 文档（design-document.md, tech-stack.md, implementation-plan.md）
 - Git 仓库初始化，首次提交
 - GitHub 私有仓库创建并推送：https://github.com/cheeemmms/Yunntan_Recorder
