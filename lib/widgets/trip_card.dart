@@ -237,16 +237,19 @@ class _TripCardState extends State<TripCard> with TickerProviderStateMixin {
     final hasArrival = trip.arrivalTime != null;
 
     return Row(
+      crossAxisAlignment: CrossAxisAlignment.center,
       children: [
         SizedBox(
-          width: hasArrival ? 52 : 48,
+          width: hasArrival ? 56 : 48,
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
             children: [
               Text(
                 _dateStr,
                 style: theme.textTheme.bodySmall?.copyWith(
                   color: colorScheme.onSurfaceVariant,
+                  height: 1.3,
                 ),
               ),
               Text(
@@ -254,13 +257,17 @@ class _TripCardState extends State<TripCard> with TickerProviderStateMixin {
                 style: theme.textTheme.labelLarge?.copyWith(
                   color: colorScheme.onSurface,
                   fontWeight: FontWeight.w600,
+                  height: 1.3,
                 ),
               ),
               if (hasArrival) ...[
-                Icon(
-                  Icons.south,
-                  size: 12,
-                  color: colorScheme.onSurfaceVariant,
+                Center(
+                  widthFactor: 1,
+                  child: Icon(
+                    Icons.south,
+                    size: 12,
+                    color: colorScheme.onSurfaceVariant,
+                  ),
                 ),
                 _buildArrivalTimeInline(theme, colorScheme),
               ],
@@ -271,13 +278,15 @@ class _TripCardState extends State<TripCard> with TickerProviderStateMixin {
         Expanded(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
             children: [
               Row(
                 children: [
                   Text(
                     trip.trainNo,
-                    style: theme.textTheme.titleMedium?.copyWith(
+                    style: theme.textTheme.titleLarge?.copyWith(
                       fontWeight: FontWeight.bold,
+                      height: 1.3,
                     ),
                   ),
                   if (trip.trainType.isNotEmpty) ...[
@@ -302,11 +311,12 @@ class _TripCardState extends State<TripCard> with TickerProviderStateMixin {
                   ],
                 ],
               ),
-              const SizedBox(height: 2),
+              if (hasArrival) SizedBox(height: 14),
               Text(
                 _route,
                 style: theme.textTheme.bodyMedium?.copyWith(
                   color: colorScheme.onSurfaceVariant,
+                  height: 1.3,
                 ),
               ),
             ],
@@ -342,6 +352,13 @@ class _TripCardState extends State<TripCard> with TickerProviderStateMixin {
       crossAxisAlignment: CrossAxisAlignment.baseline,
       textBaseline: TextBaseline.alphabetic,
       children: [
+        Text(
+          _arrivalTimeStr,
+          style: theme.textTheme.labelLarge?.copyWith(
+            color: cs.onSurface,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
         if (offset != null && offset > 0)
           Text(
             '+$offset',
@@ -351,13 +368,6 @@ class _TripCardState extends State<TripCard> with TickerProviderStateMixin {
               fontWeight: FontWeight.w500,
             ),
           ),
-        Text(
-          _arrivalTimeStr,
-          style: theme.textTheme.labelLarge?.copyWith(
-            color: cs.onSurface,
-            fontWeight: FontWeight.w600,
-          ),
-        ),
       ],
     );
   }
@@ -627,8 +637,7 @@ class _TicketContent extends StatelessWidget {
             if (arrivalTimeStr.isNotEmpty) ...[
               Row(
                 mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.baseline,
-                textBaseline: TextBaseline.alphabetic,
+                crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
                   Text(
                     timeStr,
@@ -644,6 +653,7 @@ class _TicketContent extends StatelessWidget {
                     padding: const EdgeInsets.symmetric(horizontal: 3),
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: CrossAxisAlignment.center,
                       children: [
                         if (durationLabel != null)
                           Text(
@@ -660,33 +670,40 @@ class _TicketContent extends StatelessWidget {
                           style: TextStyle(
                             fontSize: 14,
                             color: cs.onSurfaceVariant,
-                            height: durationLabel != null ? 0.9 : 1.2,
+                            height: durationLabel != null ? 1.0 : 1.2,
                             decoration: TextDecoration.none,
                           ),
                         ),
                       ],
                     ),
                   ),
-                  if (dayOffset != null && dayOffset! > 0)
-                    Text(
-                      '+$dayOffset',
-                      style: TextStyle(
-                        fontSize: 10,
-                        color: cs.onSurfaceVariant.withOpacity(0.6),
-                        fontWeight: FontWeight.w500,
-                        height: 1.2,
-                        decoration: TextDecoration.none,
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.baseline,
+                    textBaseline: TextBaseline.alphabetic,
+                    children: [
+                      Text(
+                        arrivalTimeStr,
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                          color: cs.onSurface,
+                          height: 1.2,
+                          decoration: TextDecoration.none,
+                        ),
                       ),
-                    ),
-                  Text(
-                    arrivalTimeStr,
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                      color: cs.onSurface,
-                      height: 1.2,
-                      decoration: TextDecoration.none,
-                    ),
+                      if (dayOffset != null && dayOffset! > 0)
+                        Text(
+                          '+$dayOffset',
+                          style: TextStyle(
+                            fontSize: 10,
+                            color: cs.onSurfaceVariant.withOpacity(0.6),
+                            fontWeight: FontWeight.w500,
+                            height: 1.2,
+                            decoration: TextDecoration.none,
+                          ),
+                        ),
+                    ],
                   ),
                 ],
               ),
