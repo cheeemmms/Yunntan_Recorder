@@ -9,9 +9,9 @@ import 'models/trip.dart';
 import 'providers/trip_provider.dart';
 import 'widgets/trip_card.dart';
 
-final scrollToTopVisibleProvider = StateProvider<bool>((ref) => false);
-final homeScrollControllerProvider = StateProvider<ScrollController?>(
-  (ref) => null,
+final ValueNotifier<bool> scrollToTopNotifier = ValueNotifier(false);
+final ValueNotifier<ScrollController?> homeScrollCtrlNotifier = ValueNotifier(
+  null,
 );
 
 void main() {
@@ -83,14 +83,14 @@ class TrainLedgerApp extends StatelessWidget {
   }
 }
 
-class MainShell extends ConsumerStatefulWidget {
+class MainShell extends StatefulWidget {
   const MainShell({super.key});
 
   @override
-  ConsumerState<MainShell> createState() => _MainShellState();
+  State<MainShell> createState() => _MainShellState();
 }
 
-class _MainShellState extends ConsumerState<MainShell> {
+class _MainShellState extends State<MainShell> {
   int _currentIndex = 0;
 
   static const _pages = <Widget>[
@@ -101,28 +101,36 @@ class _MainShellState extends ConsumerState<MainShell> {
 
   @override
   Widget build(BuildContext context) {
-    final showScrollToTop = ref.watch(scrollToTopVisibleProvider);
-    final scrollCtrl = ref.watch(homeScrollControllerProvider);
-
     return Scaffold(
       body: _pages[_currentIndex],
       floatingActionButton: _currentIndex == 0
           ? Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                if (showScrollToTop && scrollCtrl != null)
-                  Padding(
-                    padding: const EdgeInsets.only(bottom: 8),
-                    child: FloatingActionButton.small(
-                      heroTag: 'scrollToTop',
-                      onPressed: () => scrollCtrl.animateTo(
-                        0,
-                        duration: const Duration(milliseconds: 300),
-                        curve: Curves.easeOut,
-                      ),
-                      child: const Icon(Icons.keyboard_arrow_up),
-                    ),
-                  ),
+                ValueListenableBuilder<bool>(
+                  valueListenable: scrollToTopNotifier,
+                  builder: (_, show, __) {
+                    if (!show) return const SizedBox.shrink();
+                    return ValueListenableBuilder<ScrollController?>(
+                      valueListenable: homeScrollCtrlNotifier,
+                      builder: (_, ctrl, __) {
+                        if (ctrl == null) return const SizedBox.shrink();
+                        return Padding(
+                          padding: const EdgeInsets.only(bottom: 8),
+                          child: FloatingActionButton.small(
+                            heroTag: 'scrollToTop',
+                            onPressed: () => ctrl.animateTo(
+                              0,
+                              duration: const Duration(milliseconds: 300),
+                              curve: Curves.easeOut,
+                            ),
+                            child: const Icon(Icons.keyboard_arrow_up),
+                          ),
+                        );
+                      },
+                    );
+                  },
+                ),
                 FloatingActionButton(
                   heroTag: 'addTrip',
                   onPressed: () => Navigator.push(
@@ -173,7 +181,7 @@ class _HomePageState extends ConsumerState<HomePage> {
     super.initState();
     _scrollController.addListener(_onScroll);
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      ref.read(homeScrollControllerProvider.notifier).state = _scrollController;
+      homeScrollCtrlNotifier.value = _scrollController;
     });
   }
 
@@ -187,9 +195,8 @@ class _HomePageState extends ConsumerState<HomePage> {
   void _onScroll() {
     final offset = _scrollController.offset;
     final show = offset > 200;
-    final currentShow = ref.read(scrollToTopVisibleProvider);
-    if (show != currentShow) {
-      ref.read(scrollToTopVisibleProvider.notifier).state = show;
+    if (show != scrollToTopNotifier.value) {
+      scrollToTopNotifier.value = show;
     }
     if (_filterExpanded && offset > _lastScrollOffset && offset > 0) {
       setState(() => _filterExpanded = false);
