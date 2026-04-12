@@ -239,30 +239,40 @@ class _TripCardState extends State<TripCard> with TickerProviderStateMixin {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.center,
       children: [
-        Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(
-              _dateStr,
-              style: theme.textTheme.bodySmall?.copyWith(
-                color: colorScheme.onSurfaceVariant,
-                height: 1.3,
-              ),
-            ),
-            _buildDepartureRow(theme, colorScheme),
-            if (hasArrival) ...[
-              Center(
-                widthFactor: 1,
-                child: Icon(
-                  Icons.south,
-                  size: 12,
+        SizedBox(
+          width: hasArrival ? 56 : 48,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                _dateStr,
+                style: theme.textTheme.bodySmall?.copyWith(
                   color: colorScheme.onSurfaceVariant,
+                  height: 1.3,
                 ),
               ),
-              _buildArrivalTimeInline(theme, colorScheme),
+              Text(
+                _timeStr,
+                style: theme.textTheme.labelLarge?.copyWith(
+                  color: colorScheme.onSurface,
+                  fontWeight: FontWeight.w600,
+                  height: 1.3,
+                ),
+              ),
+              if (hasArrival) ...[
+                Center(
+                  widthFactor: 1,
+                  child: Icon(
+                    Icons.south,
+                    size: 12,
+                    color: colorScheme.onSurfaceVariant,
+                  ),
+                ),
+                _buildArrivalTimeInline(theme, colorScheme),
+              ],
             ],
-          ],
+          ),
         ),
         const SizedBox(width: 12),
         Expanded(
@@ -270,7 +280,37 @@ class _TripCardState extends State<TripCard> with TickerProviderStateMixin {
             crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisSize: MainAxisSize.min,
             children: [
-              _buildTrainNoRow(theme, colorScheme),
+              Row(
+                children: [
+                  Text(
+                    trip.trainNo,
+                    style: theme.textTheme.titleLarge?.copyWith(
+                      fontWeight: FontWeight.bold,
+                      height: 1.3,
+                    ),
+                  ),
+                  if (trip.trainType.isNotEmpty) ...[
+                    const SizedBox(width: 6),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 6,
+                        vertical: 1,
+                      ),
+                      decoration: BoxDecoration(
+                        color: colorScheme.primaryContainer,
+                        borderRadius: BorderRadius.circular(6),
+                      ),
+                      child: Text(
+                        trip.trainType,
+                        style: theme.textTheme.labelSmall?.copyWith(
+                          color: colorScheme.onPrimaryContainer,
+                          fontSize: 10,
+                        ),
+                      ),
+                    ),
+                  ],
+                ],
+              ),
               if (hasArrival) SizedBox(height: 14),
               Text(
                 _route,
@@ -301,56 +341,6 @@ class _TripCardState extends State<TripCard> with TickerProviderStateMixin {
           color: colorScheme.onSurfaceVariant,
           size: 20,
         ),
-      ],
-    );
-  }
-
-  Widget _buildDepartureRow(ThemeData theme, ColorScheme cs) {
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.baseline,
-      textBaseline: TextBaseline.alphabetic,
-      children: [
-        Text(
-          _timeStr,
-          style: theme.textTheme.titleLarge?.copyWith(
-            color: cs.onSurface,
-            fontWeight: FontWeight.bold,
-            height: 1.3,
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildTrainNoRow(ThemeData theme, ColorScheme cs) {
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.baseline,
-      textBaseline: TextBaseline.alphabetic,
-      children: [
-        Text(
-          trip.trainNo,
-          style: theme.textTheme.titleLarge?.copyWith(
-            fontWeight: FontWeight.bold,
-            height: 1.3,
-          ),
-        ),
-        if (trip.trainType.isNotEmpty) ...[
-          const SizedBox(width: 6),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
-            decoration: BoxDecoration(
-              color: cs.primaryContainer,
-              borderRadius: BorderRadius.circular(6),
-            ),
-            child: Text(
-              trip.trainType,
-              style: theme.textTheme.labelSmall?.copyWith(
-                color: cs.onPrimaryContainer,
-                fontSize: 10,
-              ),
-            ),
-          ),
-        ],
       ],
     );
   }
