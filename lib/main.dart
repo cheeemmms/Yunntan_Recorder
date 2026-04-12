@@ -9,6 +9,11 @@ import 'models/trip.dart';
 import 'providers/trip_provider.dart';
 import 'widgets/trip_card.dart';
 
+final scrollToTopVisibleProvider = StateProvider<bool>((ref) => false);
+final homeScrollControllerProvider = StateProvider<ScrollController?>(
+  (ref) => null,
+);
+
 void main() {
   runApp(const ProviderScope(child: TrainLedgerApp()));
 }
@@ -78,14 +83,14 @@ class TrainLedgerApp extends StatelessWidget {
   }
 }
 
-class MainShell extends StatefulWidget {
+class MainShell extends ConsumerStatefulWidget {
   const MainShell({super.key});
 
   @override
-  State<MainShell> createState() => _MainShellState();
+  ConsumerState<MainShell> createState() => _MainShellState();
 }
 
-class _MainShellState extends State<MainShell> {
+class _MainShellState extends ConsumerState<MainShell> {
   int _currentIndex = 0;
 
   static const _pages = <Widget>[
@@ -96,8 +101,39 @@ class _MainShellState extends State<MainShell> {
 
   @override
   Widget build(BuildContext context) {
+    final showScrollToTop = ref.watch(scrollToTopVisibleProvider);
+    final scrollCtrl = ref.watch(homeScrollControllerProvider);
+
     return Scaffold(
       body: _pages[_currentIndex],
+      floatingActionButton: _currentIndex == 0
+          ? Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                if (showScrollToTop && scrollCtrl != null)
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 8),
+                    child: FloatingActionButton.small(
+                      heroTag: 'scrollToTop',
+                      onPressed: () => scrollCtrl.animateTo(
+                        0,
+                        duration: const Duration(milliseconds: 300),
+                        curve: Curves.easeOut,
+                      ),
+                      child: const Icon(Icons.keyboard_arrow_up),
+                    ),
+                  ),
+                FloatingActionButton(
+                  heroTag: 'addTrip',
+                  onPressed: () => Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (_) => const EntryPage()),
+                  ),
+                  child: const Icon(Icons.add),
+                ),
+              ],
+            )
+          : null,
       bottomNavigationBar: NavigationBar(
         selectedIndex: _currentIndex,
         onDestinationSelected: (i) => setState(() => _currentIndex = i),
@@ -124,8 +160,7 @@ class _HomePageState extends ConsumerState<HomePage> {
 
   final ScrollController _scrollController = ScrollController();
   bool _filterExpanded = false;
-  bool _showScrollToTop = false;
-  final ValueNotifier<bool> _scrollToTopNotifier = ValueNotifier(false);
+  double _lastScrollOffset = 0;
 
   Set<int> _filterYears = {};
   Set<String> _filterCategories = {};
@@ -137,43 +172,39 @@ class _HomePageState extends ConsumerState<HomePage> {
   void initState() {
     super.initState();
     _scrollController.addListener(_onScroll);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      ref.read(homeScrollControllerProvider.notifier).state = _scrollController;
+    });
   }
 
   @override
   void dispose() {
     _scrollController.removeListener(_onScroll);
     _scrollController.dispose();
-    _scrollToTopNotifier.dispose();
     super.dispose();
   }
 
   void _onScroll() {
-    final show = _scrollController.offset > 200;
-    if (show != _showScrollToTop) {
-      _showScrollToTop = show;
-      _scrollToTopNotifier.value = show;
+    final offset = _scrollController.offset;
+    final show = offset > 200;
+    final currentShow = ref.read(scrollToTopVisibleProvider);
+    if (show != currentShow) {
+      ref.read(scrollToTopVisibleProvider.notifier).state = show;
     }
-    if (_scrollController.offset <= 0 && _filterExpanded) {
+    if (_filterExpanded && offset > _lastScrollOffset && offset > 0) {
       setState(() => _filterExpanded = false);
     }
+    _lastScrollOffset = offset;
   }
 
-  bool _handleOverscroll(ScrollMetricsNotification notification) {
-    if (notification.metrics.pixels <= 0 &&
-        notification.metrics.axis == Axis.vertical &&
+  bool _handleOverscroll(OverscrollNotification notification) {
+    if (notification.overscroll < 0 &&
+        _scrollController.offset <= 0 &&
         !_filterExpanded) {
       setState(() => _filterExpanded = true);
       return true;
     }
     return false;
-  }
-
-  void _scrollToTop() {
-    _scrollController.animateTo(
-      0,
-      duration: const Duration(milliseconds: 300),
-      curve: Curves.easeOut,
-    );
   }
 
   void _resetFilters() {
@@ -237,33 +268,6 @@ class _HomePageState extends ConsumerState<HomePage> {
           ),
         ],
       ),
-      floatingActionButton: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          ValueListenableBuilder<bool>(
-            valueListenable: _scrollToTopNotifier,
-            builder: (_, show, __) {
-              if (!show) return const SizedBox.shrink();
-              return Padding(
-                padding: const EdgeInsets.only(bottom: 8),
-                child: FloatingActionButton.small(
-                  heroTag: 'scrollToTop',
-                  onPressed: _scrollToTop,
-                  child: const Icon(Icons.keyboard_arrow_up),
-                ),
-              );
-            },
-          ),
-          FloatingActionButton(
-            heroTag: 'addTrip',
-            onPressed: () => Navigator.push(
-              context,
-              MaterialPageRoute(builder: (_) => const EntryPage()),
-            ),
-            child: const Icon(Icons.add),
-          ),
-        ],
-      ),
       body: tripListAsync.when(
         data: (trips) {
           if (trips.isEmpty) {
@@ -298,7 +302,7 @@ class _HomePageState extends ConsumerState<HomePage> {
             ..sort((a, b) => b.departureTime.compareTo(a.departureTime));
           final filtered = _hasActiveFilter ? _applyFilters(sorted) : sorted;
 
-          return NotificationListener<ScrollMetricsNotification>(
+          return NotificationListener<OverscrollNotification>(
             onNotification: _handleOverscroll,
             child: Column(
               children: [
@@ -516,7 +520,6 @@ class _HomePageState extends ConsumerState<HomePage> {
       child: InputChip(
         selected: hasSelection,
         label: Text(hasSelection ? '$label(${values.length})' : label),
-        onPressed: () {},
         onDeleted: hasSelection ? onClear : null,
       ),
     );
@@ -632,7 +635,6 @@ class _HomePageState extends ConsumerState<HomePage> {
               ? '$label(${_filterCategories.length + _filterPlatforms.length})'
               : label,
         ),
-        onPressed: () {},
         onDeleted: hasSelection
             ? () => setState(() {
                 _filterCategories.clear();
