@@ -168,7 +168,6 @@ class _HomePageState extends ConsumerState<HomePage> {
 
   final ScrollController _scrollController = ScrollController();
   bool _filterExpanded = false;
-  double _lastScrollOffset = 0;
 
   Set<int> _filterYears = {};
   Set<String> _filterCategories = {};
@@ -198,20 +197,6 @@ class _HomePageState extends ConsumerState<HomePage> {
     if (show != scrollToTopNotifier.value) {
       scrollToTopNotifier.value = show;
     }
-    if (_filterExpanded && offset > _lastScrollOffset && offset > 0) {
-      setState(() => _filterExpanded = false);
-    }
-    _lastScrollOffset = offset;
-  }
-
-  bool _handleOverscroll(OverscrollNotification notification) {
-    if (notification.overscroll < 0 &&
-        _scrollController.offset <= 0 &&
-        !_filterExpanded) {
-      setState(() => _filterExpanded = true);
-      return true;
-    }
-    return false;
   }
 
   void _resetFilters() {
@@ -309,56 +294,52 @@ class _HomePageState extends ConsumerState<HomePage> {
             ..sort((a, b) => b.departureTime.compareTo(a.departureTime));
           final filtered = _hasActiveFilter ? _applyFilters(sorted) : sorted;
 
-          return NotificationListener<OverscrollNotification>(
-            onNotification: _handleOverscroll,
-            child: Column(
-              children: [
-                AnimatedSize(
-                  duration: const Duration(milliseconds: 250),
-                  curve: Curves.easeInOut,
-                  alignment: Alignment.topCenter,
-                  child: _filterExpanded
-                      ? _buildFilterPanel(theme, sorted)
-                      : const SizedBox.shrink(),
-                ),
-                Expanded(
-                  child: filtered.isEmpty
-                      ? Center(
-                          child: Text(
-                            '无匹配记录',
-                            style: theme.textTheme.bodyMedium?.copyWith(
-                              color: theme.colorScheme.onSurfaceVariant,
-                            ),
+          return Column(
+            children: [
+              AnimatedSize(
+                duration: const Duration(milliseconds: 250),
+                curve: Curves.easeInOut,
+                alignment: Alignment.topCenter,
+                child: _filterExpanded
+                    ? _buildFilterPanel(theme, sorted)
+                    : const SizedBox.shrink(),
+              ),
+              Expanded(
+                child: filtered.isEmpty
+                    ? Center(
+                        child: Text(
+                          '无匹配记录',
+                          style: theme.textTheme.bodyMedium?.copyWith(
+                            color: theme.colorScheme.onSurfaceVariant,
                           ),
-                        )
-                      : ListView.builder(
-                          controller: _scrollController,
-                          padding: const EdgeInsets.only(top: 8, bottom: 88),
-                          itemCount: filtered.length,
-                          itemBuilder: (context, index) {
-                            final trip = filtered[index];
-                            _cardKeys.putIfAbsent(trip.id, () => GlobalKey());
-                            return TripCard(
-                              cardKey: _cardKeys[trip.id]!,
-                              registerClose: (close) {
-                                _closeCurrentSlidable?.call();
-                                _closeCurrentSlidable = close;
-                              },
-                              trip: trip,
-                              onEdit: () => Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (_) => EntryPage(trip: trip),
-                                ),
-                              ),
-                              onDelete: () =>
-                                  _confirmDelete(context, ref, trip),
-                            );
-                          },
                         ),
-                ),
-              ],
-            ),
+                      )
+                    : ListView.builder(
+                        controller: _scrollController,
+                        padding: const EdgeInsets.only(top: 8, bottom: 88),
+                        itemCount: filtered.length,
+                        itemBuilder: (context, index) {
+                          final trip = filtered[index];
+                          _cardKeys.putIfAbsent(trip.id, () => GlobalKey());
+                          return TripCard(
+                            cardKey: _cardKeys[trip.id]!,
+                            registerClose: (close) {
+                              _closeCurrentSlidable?.call();
+                              _closeCurrentSlidable = close;
+                            },
+                            trip: trip,
+                            onEdit: () => Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) => EntryPage(trip: trip),
+                              ),
+                            ),
+                            onDelete: () => _confirmDelete(context, ref, trip),
+                          );
+                        },
+                      ),
+              ),
+            ],
           );
         },
         loading: () =>
@@ -419,50 +400,52 @@ class _HomePageState extends ConsumerState<HomePage> {
         runSpacing: 8,
         alignment: WrapAlignment.start,
         children: [
-          _buildFilterDropdown<int>(
+          _buildFilterChip<int>(
             label: '年份',
             values: _filterYears,
-            allItems: years,
             itemLabel: (y) => '$y',
-            onToggle: (y) => setState(() {
-              _filterYears.contains(y)
-                  ? _filterYears.remove(y)
-                  : _filterYears.add(y);
-            }),
             onClear: () => setState(() => _filterYears.clear()),
-            theme: theme,
+            onTap: () => _showMultiSelectBottomSheet<int>(
+              context: context,
+              title: '选择年份',
+              items: years,
+              selectedValues: _filterYears,
+              itemLabel: (y) => '$y',
+              onConfirm: (selected) => setState(() => _filterYears = selected),
+            ),
           ),
-          _buildCascadingFilterDropdown(
-            label: '车底型号',
-            categories: categories,
+          _buildCascadingFilterChip(
             categoryPlatformMap: categoryPlatformMap,
-            theme: theme,
+            categories: categories,
           ),
-          _buildFilterDropdown<String>(
+          _buildFilterChip<String>(
             label: '席位类型',
             values: _filterSeats,
-            allItems: seats,
             itemLabel: (s) => s,
-            onToggle: (s) => setState(() {
-              _filterSeats.contains(s)
-                  ? _filterSeats.remove(s)
-                  : _filterSeats.add(s);
-            }),
             onClear: () => setState(() => _filterSeats.clear()),
-            theme: theme,
+            onTap: () => _showMultiSelectBottomSheet<String>(
+              context: context,
+              title: '选择席位类型',
+              items: seats,
+              selectedValues: _filterSeats,
+              itemLabel: (s) => s,
+              onConfirm: (selected) => setState(() => _filterSeats = selected),
+            ),
           ),
-          _buildFilterDropdown<String>(
+          _buildFilterChip<String>(
             label: '局段',
             values: _filterBureaus,
-            allItems: bureaus,
             itemLabel: (b) => b,
-            onToggle: (b) => setState(() {
-              _filterBureaus.contains(b)
-                  ? _filterBureaus.remove(b)
-                  : _filterBureaus.add(b);
-            }),
             onClear: () => setState(() => _filterBureaus.clear()),
-            theme: theme,
+            onTap: () => _showMultiSelectBottomSheet<String>(
+              context: context,
+              title: '选择局段',
+              items: bureaus,
+              selectedValues: _filterBureaus,
+              itemLabel: (b) => b,
+              onConfirm: (selected) =>
+                  setState(() => _filterBureaus = selected),
+            ),
           ),
           if (_hasActiveFilter)
             ActionChip(
@@ -475,180 +458,307 @@ class _HomePageState extends ConsumerState<HomePage> {
     );
   }
 
-  Widget _buildFilterDropdown<T>({
+  Widget _buildFilterChip<T>({
     required String label,
     required Set<T> values,
-    required List<T> allItems,
     required String Function(T) itemLabel,
-    required void Function(T) onToggle,
     required VoidCallback onClear,
-    required ThemeData theme,
+    required VoidCallback onTap,
   }) {
-    final cs = theme.colorScheme;
     final hasSelection = values.isNotEmpty;
-
-    return PopupMenuButton<T>(
-      offset: const Offset(0, 40),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      constraints: const BoxConstraints(maxHeight: 360),
-      onSelected: onToggle,
-      itemBuilder: (context) => [
-        ...allItems.map(
-          (item) => PopupMenuItem<T>(
-            value: item,
-            child: Row(
-              children: [
-                SizedBox(
-                  width: 24,
-                  height: 24,
-                  child: Checkbox(
-                    value: values.contains(item),
-                    onChanged: (_) => onToggle(item),
-                  ),
-                ),
-                const SizedBox(width: 8),
-                Text(itemLabel(item)),
-              ],
-            ),
-          ),
-        ),
-        if (hasSelection)
-          PopupMenuItem<T>(
-            height: 36,
-            child: Center(
-              child: Text(
-                '清除筛选',
-                style: TextStyle(color: cs.primary, fontSize: 13),
-              ),
-            ),
-            onTap: onClear,
-          ),
-      ],
-      child: InputChip(
-        selected: hasSelection,
-        label: Text(hasSelection ? '$label(${values.length})' : label),
-        onDeleted: hasSelection ? onClear : null,
+    return InputChip(
+      selected: hasSelection,
+      label: Text(hasSelection ? '$label(${values.length})' : label),
+      onPressed: onTap,
+      onDeleted: hasSelection ? onClear : null,
+      selectedColor: Theme.of(context).colorScheme.primaryContainer,
+      backgroundColor: Colors.transparent,
+      side: BorderSide(
+        color: hasSelection
+            ? Theme.of(context).colorScheme.outline
+            : Theme.of(context).colorScheme.outlineVariant,
+      ),
+      labelStyle: TextStyle(
+        color: hasSelection
+            ? Theme.of(context).colorScheme.onSurface
+            : Theme.of(context).colorScheme.onSurface,
       ),
     );
   }
 
-  Widget _buildCascadingFilterDropdown({
-    required String label,
+  Widget _buildCascadingFilterChip({
     required List<String> categories,
     required Map<String, Set<String>> categoryPlatformMap,
-    required ThemeData theme,
   }) {
-    final cs = theme.colorScheme;
     final hasSelection =
         _filterCategories.isNotEmpty || _filterPlatforms.isNotEmpty;
+    return InputChip(
+      selected: hasSelection,
+      label: Text(
+        hasSelection
+            ? '车底型号(${_filterCategories.length + _filterPlatforms.length})'
+            : '车底型号',
+      ),
+      onPressed: () => _showCascadingBottomSheet(
+        context: context,
+        categories: categories,
+        categoryPlatformMap: categoryPlatformMap,
+      ),
+      onDeleted: hasSelection
+          ? () => setState(() {
+              _filterCategories.clear();
+              _filterPlatforms.clear();
+            })
+          : null,
+      selectedColor: Theme.of(context).colorScheme.primaryContainer,
+      backgroundColor: Colors.transparent,
+      side: BorderSide(
+        color: hasSelection
+            ? Theme.of(context).colorScheme.outline
+            : Theme.of(context).colorScheme.outlineVariant,
+      ),
+      labelStyle: TextStyle(color: Theme.of(context).colorScheme.onSurface),
+    );
+  }
 
-    return PopupMenuButton<String>(
-      offset: const Offset(0, 40),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      constraints: const BoxConstraints(maxHeight: 400),
-      onSelected: (value) {},
-      itemBuilder: (context) {
-        final items = <PopupMenuEntry<String>>[];
-        for (final cat in categories) {
-          final catSelected = _filterCategories.contains(cat);
-          final platforms = categoryPlatformMap[cat]?.toList() ?? [];
-          platforms.sort();
-
-          items.add(
-            PopupMenuItem<String>(
-              value: 'cat:$cat',
-              height: 40,
-              child: Row(
-                children: [
-                  SizedBox(
-                    width: 24,
-                    height: 24,
-                    child: Checkbox(
-                      value: catSelected,
-                      onChanged: (_) => setState(() {
-                        catSelected
-                            ? _filterCategories.remove(cat)
-                            : _filterCategories.add(cat);
-                      }),
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  Text(
-                    cat,
-                    style: const TextStyle(fontWeight: FontWeight.w600),
-                  ),
-                ],
+  void _showMultiSelectBottomSheet<T>({
+    required BuildContext context,
+    required String title,
+    required List<T> items,
+    required Set<T> selectedValues,
+    required String Function(T) itemLabel,
+    required void Function(Set<T>) onConfirm,
+  }) {
+    final tempSelected = Set<T>.from(selectedValues);
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+      ),
+      builder: (ctx) {
+        return StatefulBuilder(
+          builder: (ctx, setModalState) {
+            return ConstrainedBox(
+              constraints: BoxConstraints(
+                maxHeight: MediaQuery.of(ctx).size.height * 0.6,
               ),
-            ),
-          );
-
-          if (catSelected && platforms.isNotEmpty) {
-            for (final plat in platforms) {
-              items.add(
-                PopupMenuItem<String>(
-                  value: 'plat:$plat',
-                  height: 36,
-                  child: Padding(
-                    padding: const EdgeInsets.only(left: 32),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(16, 12, 8, 0),
                     child: Row(
                       children: [
-                        SizedBox(
-                          width: 24,
-                          height: 24,
-                          child: Checkbox(
-                            value: _filterPlatforms.contains(plat),
-                            onChanged: (_) => setState(() {
-                              _filterPlatforms.contains(plat)
-                                  ? _filterPlatforms.remove(plat)
-                                  : _filterPlatforms.add(plat);
-                            }),
+                        Expanded(
+                          child: Text(
+                            title,
+                            style: Theme.of(ctx).textTheme.titleMedium,
                           ),
                         ),
-                        const SizedBox(width: 8),
-                        Text(plat, style: const TextStyle(fontSize: 13)),
+                        if (tempSelected.isNotEmpty)
+                          TextButton(
+                            onPressed: () =>
+                                setModalState(() => tempSelected.clear()),
+                            child: const Text('清除'),
+                          ),
+                        IconButton(
+                          icon: const Icon(Icons.close),
+                          onPressed: () => Navigator.pop(ctx),
+                        ),
                       ],
                     ),
                   ),
-                ),
-              );
-            }
-          }
-        }
-
-        if (hasSelection) {
-          items.add(
-            PopupMenuItem<String>(
-              height: 36,
-              child: Center(
-                child: Text(
-                  '清除筛选',
-                  style: TextStyle(color: cs.primary, fontSize: 13),
-                ),
+                  const Divider(height: 1),
+                  Flexible(
+                    child: ListView.builder(
+                      shrinkWrap: true,
+                      itemCount: items.length,
+                      itemBuilder: (_, index) {
+                        final item = items[index];
+                        final isSelected = tempSelected.contains(item);
+                        return CheckboxListTile(
+                          value: isSelected,
+                          title: Text(itemLabel(item)),
+                          controlAffinity: ListTileControlAffinity.leading,
+                          onChanged: (checked) {
+                            setModalState(() {
+                              if (checked == true) {
+                                tempSelected.add(item);
+                              } else {
+                                tempSelected.remove(item);
+                              }
+                            });
+                          },
+                        );
+                      },
+                    ),
+                  ),
+                  const Divider(height: 1),
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
+                    child: SizedBox(
+                      width: double.infinity,
+                      child: FilledButton(
+                        onPressed: () {
+                          onConfirm(tempSelected);
+                          Navigator.pop(ctx);
+                        },
+                        child: const Text('完成'),
+                      ),
+                    ),
+                  ),
+                ],
               ),
-              onTap: () => setState(() {
-                _filterCategories.clear();
-                _filterPlatforms.clear();
-              }),
-            ),
-          );
-        }
-
-        return items;
+            );
+          },
+        );
       },
-      child: InputChip(
-        selected: hasSelection,
-        label: Text(
-          hasSelection
-              ? '$label(${_filterCategories.length + _filterPlatforms.length})'
-              : label,
-        ),
-        onDeleted: hasSelection
-            ? () => setState(() {
-                _filterCategories.clear();
-                _filterPlatforms.clear();
-              })
-            : null,
+    );
+  }
+
+  void _showCascadingBottomSheet({
+    required BuildContext context,
+    required List<String> categories,
+    required Map<String, Set<String>> categoryPlatformMap,
+  }) {
+    final tempCategories = Set<String>.from(_filterCategories);
+    final tempPlatforms = Set<String>.from(_filterPlatforms);
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
       ),
+      builder: (ctx) {
+        return StatefulBuilder(
+          builder: (ctx, setModalState) {
+            return ConstrainedBox(
+              constraints: BoxConstraints(
+                maxHeight: MediaQuery.of(ctx).size.height * 0.7,
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(16, 12, 8, 0),
+                    child: Row(
+                      children: [
+                        const Expanded(
+                          child: Text(
+                            '选择车底型号',
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ),
+                        if (tempCategories.isNotEmpty ||
+                            tempPlatforms.isNotEmpty)
+                          TextButton(
+                            onPressed: () => setModalState(() {
+                              tempCategories.clear();
+                              tempPlatforms.clear();
+                            }),
+                            child: const Text('清除'),
+                          ),
+                        IconButton(
+                          icon: const Icon(Icons.close),
+                          onPressed: () => Navigator.pop(ctx),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const Divider(height: 1),
+                  Flexible(
+                    child: ListView.builder(
+                      shrinkWrap: true,
+                      itemCount: categories.length,
+                      itemBuilder: (_, index) {
+                        final cat = categories[index];
+                        final catSelected = tempCategories.contains(cat);
+                        final platforms =
+                            categoryPlatformMap[cat]?.toList() ?? [];
+                        platforms.sort();
+
+                        return Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            CheckboxListTile(
+                              value: catSelected,
+                              title: Text(
+                                cat,
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                              controlAffinity: ListTileControlAffinity.leading,
+                              onChanged: (checked) {
+                                setModalState(() {
+                                  if (checked == true) {
+                                    tempCategories.add(cat);
+                                  } else {
+                                    tempCategories.remove(cat);
+                                    tempPlatforms.removeWhere(
+                                      (p) => platforms.contains(p),
+                                    );
+                                  }
+                                });
+                              },
+                            ),
+                            if (catSelected && platforms.isNotEmpty)
+                              ...platforms.map(
+                                (plat) => Padding(
+                                  padding: const EdgeInsets.only(left: 24),
+                                  child: CheckboxListTile(
+                                    value: tempPlatforms.contains(plat),
+                                    title: Text(
+                                      plat,
+                                      style: const TextStyle(fontSize: 13),
+                                    ),
+                                    controlAffinity:
+                                        ListTileControlAffinity.leading,
+                                    dense: true,
+                                    onChanged: (checked) {
+                                      setModalState(() {
+                                        if (checked == true) {
+                                          tempPlatforms.add(plat);
+                                        } else {
+                                          tempPlatforms.remove(plat);
+                                        }
+                                      });
+                                    },
+                                  ),
+                                ),
+                              ),
+                          ],
+                        );
+                      },
+                    ),
+                  ),
+                  const Divider(height: 1),
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
+                    child: SizedBox(
+                      width: double.infinity,
+                      child: FilledButton(
+                        onPressed: () {
+                          setState(() {
+                            _filterCategories = tempCategories;
+                            _filterPlatforms = tempPlatforms;
+                          });
+                          Navigator.pop(ctx);
+                        },
+                        child: const Text('完成'),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            );
+          },
+        );
+      },
     );
   }
 

@@ -5,7 +5,7 @@
   "entities": [
     {
       "id": "1:6081960130526898337",
-      "lastPropertyId": "18:6426177717519949256",
+      "lastPropertyId": "19:806433669376805625",
       "name": "Trip",
       "properties": [
         {
@@ -98,6 +98,11 @@
           "id": "18:6426177717519949256",
           "name": "remarks",
           "type": 9
+        },
+        {
+          "id": "19:806433669376805625",
+          "name": "arrivalTime",
+          "type": 10
         }
       ],
       "relations": []
