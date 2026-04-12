@@ -14,7 +14,7 @@
 | 第三阶段：本地存储引擎 | 第 5 步：ObjectBox 数据库集成 | ✅ 已完成 |
 | | 第 6 步：数据存取流程闭环 | ✅ 已完成 |
 | 第四阶段：首页总结与列表 | 第 7 步：全屏仪表盘 Dashboard | ✅ 已完成（移至成就页） |
-| | 第 8 步：历史记录流与筛选 | 🔶 部分完成（列表+卡片+滑动操作，筛选待开发） |
+| | 第 8 步：历史记录流与筛选 | 🔶 部分完成（列表+卡片+滑动+动画+到达时间+筛选已完成，筛选面板有轻微抖动待观察） |
 | 第五阶段：成就感与图库 | 第 9 步：车型照片映射系统 | ⬜ 未开始 |
 | | 第 10 步：成就统计页面 | ⬜ 未开始 |
 | 第六阶段：数据导出与分享 | 第 11 步：CSV 导出功能 | ⬜ 未开始 |
@@ -128,6 +128,34 @@ flutter build apk        # 构建 APK
 ---
 
 ## 变更日志
+
+### 2026-04-13 (第十五次更新) — 筛选面板UI修复
+
+**问题与修复**
+1. 筛选面板在列表顶端强制弹出 → 移除 OverscrollNotification 下拉展开逻辑，仅保留 AppBar 图标按钮触发
+2. PopupMenu 点击无响应 → PopupMenuButton 替换为 showModalBottomSheet，Checkbox 实时更新
+3. Checkbox 勾选后不打勾 → BottomSheet + StatefulBuilder + setModalState 实时刷新勾选状态
+4. 车底型号级联不展开 → 同样改为 BottomSheet，勾选一级后立即展开二级选项
+5. Chip 未选中时底色有色 → backgroundColor: Colors.transparent，labelStyle 统一 onSurface
+6. 回到顶部按钮不显示 → FAB 移至 MainShell，通过全局 ValueNotifier 传递滚动状态
+7. StateProvider 编译错误 → Riverpod v3 移除了 StateProvider，改用全局 ValueNotifier + ValueListenableBuilder
+8. AnimatedSize 导致顶部条目滑动抖动 → 已尝试移除但动画消失，恢复 AnimatedSize 待进一步观察
+
+**筛选面板当前实现**
+- 4 维度筛选：年份（多选）、车底型号（级联多选：类别→平台）、席位类型（多选）、局段（多选）
+- 筛选面板通过 AppBar 筛选图标展开/收起，AnimatedSize 动画过渡
+- 每个维度点击 InputChip 打开 BottomSheet，内含 CheckboxListTile 多选列表
+- 车底型号 BottomSheet：勾选一级类别后立即展开二级平台选项，取消一级时自动清除其下二级
+- BottomSheet 底部「完成」按钮确认选择，顶部「清除」按钮一键清空
+- 重置按钮：筛选面板内 ActionChip 一键清除所有筛选
+- 内存过滤逻辑，不改动 ObjectBox 查询
+
+**FAB 架构变更**
+- MainShell 改为 StatefulWidget，管理 FAB（添加记录 + 回到顶部）
+- 全局 ValueNotifier：scrollToTopNotifier（bool）、homeScrollCtrlNotifier（ScrollController?）
+- HomePage 通过 _onScroll 更新 scrollToTopNotifier，MainShell 通过 ValueListenableBuilder 监听
+
+### 2026-04-13 (第十四次更新) — 筛选功能 + 回到顶部按钮
 
 ### 2026-04-12 (第十三次更新) — 到达时间 + 成就页改造
 

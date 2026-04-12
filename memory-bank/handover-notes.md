@@ -16,7 +16,7 @@
 | 第 5 步：ObjectBox 数据库集成 | ✅ | Trip 模型新增 arrivalTime 字段，需重新 build_runner |
 | 第 6 步：数据存取流程闭环 | ✅ | 编辑/删除/预填充 |
 | 第 7 步：全屏仪表盘 Dashboard | ✅ | 已移至成就页 |
-| 第 8 步：历史记录流与筛选 | 🔶 部分完成 | 列表+卡片+滑动+动画+到达时间已完成，筛选待开发 |
+| 第 8 步：历史记录流与筛选 | 🔶 部分完成 | 列表+卡片+滑动+动画+到达时间+筛选已完成，AnimatedSize可能引起顶部条目轻微抖动 |
 | 第 9 步：车型照片映射系统 | ⬜ | |
 | 第 10 步：成就统计页面 | 🔶 部分完成 | 2×2网格+总运转时长+成就系统二级页已完成，收集者详情待开发 |
 | 第 11 步：CSV 导出功能 | ⬜ | |
@@ -43,7 +43,7 @@
 ### UI 层
 | 文件 | 说明 |
 |------|------|
-| `lib/main.dart` | 应用入口：DynamicColorBuilder + FlexThemeData + MainShell（BottomNav + FAB）+ HomePage（纯列表 + Slidable 互斥） |
+| `lib/main.dart` | 应用入口：DynamicColorBuilder + FlexThemeData + MainShell（BottomNav + FAB含回到顶部）+ HomePage（列表 + Slidable互斥 + 筛选面板 + BottomSheet多选） |
 | `lib/pages/entry_page.dart` | 录入表单（12+ 字段），支持新建/编辑模式，编辑时预填充车型和担当 |
 | `lib/pages/achievement_page.dart` | 成就页：仪表盘统计（总运转次数 + 总花费金额）+ 成就系统占位 |
 | `lib/widgets/trip_card.dart` | TripCard 组件：紧凑列表卡片 + Slidable 滑动 + Overlay 详情展开动画 |
@@ -121,7 +121,9 @@ Padding(20)
 
 ---
 
-## 🔴 已知 Bug：席位过滤不生效（Coach 时仍显示 EMU 席位）
+## 🔴 已知 Bug
+
+### 1. 席位过滤不生效（Coach 时仍显示 EMU 席位）
 
 ### 问题描述
 - 选 EMU 车型时：席位过滤**正常**，不显示硬座/软座/硬卧/软卧 ✅
@@ -146,6 +148,13 @@ Padding(20)
 3. **方案 C：强制销毁重建** — 给席位区域加 `ValueKey`，车型变化时销毁重建
 4. **方案 D：调试 DropdownButtonFormField** — 确认是否框架 bug
 
+### 2. AnimatedSize 可能导致顶部条目滑动抖动
+
+- 现象：列表最顶部条目在滑动时有轻微抽动
+- 根因：AnimatedSize 在滚动时持续测量子组件尺寸，导致 Column 布局微调
+- 已尝试移除 AnimatedSize 但筛选面板展开动画消失，已恢复
+- 可能的修复方向：改用 AnimatedCrossFade 或手动控制 AnimatedContainer 高度
+
 ---
 
 ## 🟡 待优化项
@@ -155,10 +164,13 @@ Padding(20)
 - 如果未来需要更精确的高度动画，可考虑在 Overlay 中测量内容高度后做 lerpDouble 插值
 - 文字渐显目前是整体 Opacity，如需更精细可改为分段渐显（header 先显，info 后显）
 
-### 筛选功能（第 8 步剩余）
-- 需实现年份、车次等级、局段三个筛选维度
-- 筛选条件可组合使用
-- 可参考 FilterChip 或 DropdownButton 实现
+### 筛选功能（第 8 步 — 已完成）
+- 4 维度筛选：年份（多选）、车底型号（级联多选）、席位类型（多选）、局段（多选）
+- 筛选面板通过 AppBar 图标按钮展开/收起
+- 每个维度点击 InputChip 打开 BottomSheet（CheckboxListTile 多选）
+- 车底型号 BottomSheet 支持级联：勾选一级后立即展开二级
+- 重置按钮一键清除所有筛选
+- 内存过滤逻辑，不改动 ObjectBox 查询
 
 ---
 
@@ -201,6 +213,14 @@ Padding(20)
 - 领航者页面：3列网格勋章展示（1/10/50/100/200/500/1000/5000 次）
 - 收集者页面：占位，显示已收集车型数量
 
+### 筛选功能 (main.dart)
+- AppBar 筛选图标展开/收起筛选面板（AnimatedSize 动画）
+- 4 维度 InputChip：年份、车底型号、席位类型、局段
+- 点击 InputChip 打开 BottomSheet（CheckboxListTile 多选）
+- 车底型号 BottomSheet 支持级联：勾选一级后立即展开二级
+- 重置按钮一键清除所有筛选
+- 回到顶部按钮：滚动超过 200px 显示，FAB 位于 MainShell
+
 ### 动态取色 (main.dart)
 - DynamicColorBuilder 正常提取壁纸色
 - 无动态色时回退 greyLaw
@@ -209,14 +229,13 @@ Padding(20)
 
 ## 下一步计划
 
-### 优先级 1：重新运行 build_runner
+### 优先级 1：修复 AnimatedSize 抖动
+- 顶部条目滑动时轻微抽动，AnimatedSize 持续测量导致
+- 可尝试 AnimatedCrossFade 或手动 AnimatedContainer 替代
+
+### 优先级 2：重新运行 build_runner
 - Trip 模型新增了 `arrivalTime` 字段，必须重新运行 `dart run build_runner build`
 - 否则编译会失败
-
-### 优先级 2：第 8 步筛选功能
-- 实现年份、车次等级、局段三个筛选维度
-- 筛选条件可组合使用
-- 考虑使用 FilterChip 或 PopupMenuButton
 
 ### 优先级 3：第 10 步成就统计完善
 - 收集者页面：车型覆盖率进度条 + 车型图标展示
