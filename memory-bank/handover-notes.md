@@ -1,6 +1,6 @@
 # 工作交接笔记
 
-> 最后更新：2026-04-11
+> 最后更新：2026-04-12
 > 用途：记录当前开发状态、已知问题、调试思路，方便会话切换时快速恢复上下文
 
 ---
@@ -11,10 +11,16 @@
 |------|------|------|
 | 第 1 步：Flutter 环境初始化 | ✅ | |
 | 第 2 步：构建铁路字典 | ✅ | |
-| 第 3 步：级联选择器 UI | 🔶 基本完成 | 有已知 Bug |
-| 第 4 步：全字段表单布局 | 🔶 基本完成 | 与第 3 步合并实现 |
-| 第 5 步：ObjectBox 数据库集成 | ✅ | |
-| 第 6 步：数据存取流程闭环 | ⬜ | 下一步 |
+| 第 3 步：级联选择器 UI | 🔶 基本完成 | 有已知 Bug（席位过滤） |
+| 第 4 步：全字段表单布局 | 🔶 基本完成 | 与第 3 步合并实现，新增到达时间字段 |
+| 第 5 步：ObjectBox 数据库集成 | ✅ | Trip 模型新增 arrivalTime 字段，需重新 build_runner |
+| 第 6 步：数据存取流程闭环 | ✅ | 编辑/删除/预填充 |
+| 第 7 步：全屏仪表盘 Dashboard | ✅ | 已移至成就页 |
+| 第 8 步：历史记录流与筛选 | 🔶 部分完成 | 列表+卡片+滑动+动画+到达时间已完成，筛选待开发 |
+| 第 9 步：车型照片映射系统 | ⬜ | |
+| 第 10 步：成就统计页面 | 🔶 部分完成 | 2×2网格+总运转时长+成就系统二级页已完成，收集者详情待开发 |
+| 第 11 步：CSV 导出功能 | ⬜ | |
+| 第 12 步：海报分享功能 | ⬜ | |
 
 ---
 
@@ -37,10 +43,81 @@
 ### UI 层
 | 文件 | 说明 |
 |------|------|
-| `lib/main.dart` | 入口：BottomNav + FAB → EntryPage，首页显示已保存记录数 |
-| `lib/pages/entry_page.dart` | 录入表单（12+ 字段），保存按钮连接数据库写入 |
+| `lib/main.dart` | 应用入口：DynamicColorBuilder + FlexThemeData + MainShell（BottomNav + FAB）+ HomePage（纯列表 + Slidable 互斥） |
+| `lib/pages/entry_page.dart` | 录入表单（12+ 字段），支持新建/编辑模式，编辑时预填充车型和担当 |
+| `lib/pages/achievement_page.dart` | 成就页：仪表盘统计（总运转次数 + 总花费金额）+ 成就系统占位 |
+| `lib/widgets/trip_card.dart` | TripCard 组件：紧凑列表卡片 + Slidable 滑动 + Overlay 详情展开动画 |
 | `lib/widgets/train_model_picker.dart` | 4级级联车型选择器（CupertinoPicker） |
 | `lib/widgets/bureau_picker.dart` | 2级级联担当选择器（CupertinoPicker） |
+
+---
+
+## 核心实现：TripCard 动画系统
+
+### 架构概览
+
+TripCard 是本项目最复杂的 UI 组件，包含三层交互：
+
+1. **Slidable 层**：左右滑动显示编辑/删除按钮
+2. **Card 层**：紧凑列表卡片，显示核心信息
+3. **Overlay 层**：点击卡片后全屏展开详情（火车票样式）
+
+### 动画分层（MD3 Motion 规范）
+
+AnimationController 总时长 500ms，4 条独立进度曲线：
+
+```
+时间轴: 0ms ─────────── 300ms ────────────── 500ms
+bgProgress:    ████████████████░░░░░░░░░░░░░  (easeOut)
+floatProgress: ████████████████░░░░░░░░░░░░░  (easeOutCubic)
+fadeProgress:  ████████████████░░░░░░░░░░░░░  (easeOut)
+expandProgress:████████████████████████████████ (easeOutCubic)
+```
+
+- **0-300ms 同步完成**：背景压暗+模糊、卡片上浮 10dp、文字渐显
+- **0-500ms 持续展开**：卡片宽度从条目宽度→88%屏幕宽、圆角 16→24、阴影渐增
+
+### 关键技术点
+
+| 技术点 | 实现方式 |
+|--------|----------|
+| 获取条目位置 | `RenderBox.localToGlobal(Offset.zero)` 获取 sourceRect |
+| 全屏覆盖 | `Overlay.of(context).insert(OverlayEntry(...))` |
+| 背景模糊 | `BackdropFilter(filter: ImageFilter.blur(...))` |
+| 避让状态栏 | `minTop = MediaQuery.padding.top + 16` |
+| 内容裁剪揭示 | `clipBehavior: Clip.antiAlias` + 不设固定高度 |
+| 文字渐显 | 整体 `Opacity(opacity: fadeProgress)` 包裹 |
+| 反向动画 | `_animController.reverse().then(() => _removeOverlay())` |
+| Slidable 互斥 | `RegisterCloseCallback` 回调注册模式 |
+
+### _TicketOverlay 构建流程
+
+```
+AnimatedBuilder
+  └─ Stack
+       ├─ GestureDetector (点击关闭)
+       │    └─ BackdropFilter (bgProgress 控制模糊度)
+       │         └─ Container (bgProgress 控制压暗度)
+       └─ Positioned (left/top/width 自适应)
+            └─ Container (surfaceContainerHigh + 圆角 + 阴影)
+                 └─ Clip.antiAlias
+                      └─ _TicketContent (fadeProgress 控制整体透明度)
+```
+
+### _TicketContent 布局
+
+```
+Padding(20)
+  └─ Opacity(fadeProgress)
+       └─ Column(mainAxisSize: min)
+            ├─ Header: 车次 + 类型标签 | 日期 + 时间
+            ├─ Divider (锯齿线)
+            ├─ Route: 出发站 → 到达站
+            ├─ Divider
+            ├─ InfoGrid: 票价/全程/席位/担当 (2列布局)
+            ├─ [Divider + 备注] (可选)
+            └─ SizedBox(4)
+```
 
 ---
 
@@ -58,68 +135,30 @@
 | EMU | 无座, 二等座, 一等座, 商务座 | 二等卧, 一等卧, 高级软卧 |
 | Coach | 无座, 硬座, 软座, 二等座, 一等座, 商务座 | 硬卧, 软卧, 二等卧, 一等卧, 高级软卧 |
 
-### 当前代码逻辑（entry_page.dart）
-
-```dart
-bool get _isCoach => _trainModel?.category.type == 'Coach';
-bool get _isEMU => _trainModel?.category.type == 'EMU';
-
-List<String> _filteredSeatTypes(String category) {
-  final all = _allSeatTypes[category]!;
-  if (_trainModel == null || _isCoach) return all;
-  if (_isEMU) return all.where((t) => !{'硬座', '软座', '硬卧', '软卧'}.contains(t)).toList();
-  return all;
-}
-```
-
-**逻辑本身是正确的**：`_isCoach` 为 true 时返回全部列表。问题出在 Flutter 的 `DropdownButtonFormField` 控件行为上。
-
-### 已尝试的修复方案（均未解决）
-
-1. **在 `build()` 中修正 `_seatType`**：当 `_seatType` 不在过滤后列表中时自动选第一个
-   - 结果：无效，`build()` 中修改 state 不可靠
-
-2. **给 `DropdownButtonFormField` 加 `ValueKey`**：`ValueKey('seat_${_trainModel?.category.type ?? 'none'}')`，车型切换时 key 变化强制重建
-   - 结果：无效，key 变化后 widget 确实重建了，但 items 列表似乎没有正确更新
-
-3. **在 `onConfirm` 回调中重置 `_seatType`**：
-   ```dart
-   onConfirm: (r) => setState(() {
-     _trainModel = r;
-     final valid = _filteredSeatTypes(_seatCategory);
-     if (!valid.contains(_seatType)) {
-       _seatType = valid.first;
-     }
-   }),
-   ```
-   - 结果：`_seatType` 确实被重置了，但 `DropdownButtonFormField` 的 items 列表没有更新
-
 ### 根因分析
 
-`DropdownButtonFormField` 在 `setState` 触发 rebuild 时，如果 `value` 在新 `items` 中存在，控件可能不会重新渲染 items 列表。这是 Flutter 框架层面的优化行为——当 value 不变时，控件认为不需要更新下拉选项。
-
-**关键线索**：从 EMU 切换到 Coach 时，`_seatType`（如"二等座"）在 Coach 的完整列表中也存在，所以 `DropdownButtonFormField` 认为 value 没变、items 也不需要变，导致仍然显示 EMU 过滤后的短列表。
+`DropdownButtonFormField` 在 `setState` 触发 rebuild 时，如果 `value` 在新 `items` 中存在，控件可能不会重新渲染 items 列表。从 EMU 切换到 Coach 时，`_seatType`（如"二等座"）在 Coach 的完整列表中也存在，所以控件认为 value 没变、items 也不需要变。
 
 ### 建议的修复方向
 
-1. **方案 A：替换为自定义 Chip 组**
-   - 用 `Wrap` + `ChoiceChip` 替代 `DropdownButtonFormField`
-   - 每个 seat type 渲染为一个 Chip，点击选中
-   - 优点：完全控制渲染，不受 DropdownButtonFormField 缓存影响
-   - 缺点：UI 风格变化
+1. **方案 A：替换为自定义 Chip 组** — `Wrap` + `ChoiceChip`，完全控制渲染
+2. **方案 B：StatefulBuilder 包裹** — 手动管理 items 状态
+3. **方案 C：强制销毁重建** — 给席位区域加 `ValueKey`，车型变化时销毁重建
+4. **方案 D：调试 DropdownButtonFormField** — 确认是否框架 bug
 
-2. **方案 B：使用 StatefulBuilder 包裹**
-   - 在 `_buildDropdown` 内部使用 `StatefulBuilder`，手动管理 items 状态
-   - 当车型变化时，通过 builder 的 setState 强制刷新
+---
 
-3. **方案 C：强制销毁重建整个 Row**
-   - 给席位区域的 `Row` 加 `ValueKey(_trainModel?.category.type ?? 'none')`
-   - 这样整个 Row 在车型变化时会被销毁重建
-   - 最简单粗暴，但可能有动画闪烁
+## 🟡 待优化项
 
-4. **方案 D：调试 DropdownButtonFormField 内部状态**
-   - 在 `_buildDropdown` 中打印 items 和 value，确认传入参数是否正确
-   - 如果参数正确但 UI 不更新，说明是框架 bug，需要用 GlobalKey 或其他方式绕过
+### TripCard 动画
+- 当前卡片高度不固定（使用 `mainAxisSize: MainAxisSize.min`），展开过程中高度由内容决定
+- 如果未来需要更精确的高度动画，可考虑在 Overlay 中测量内容高度后做 lerpDouble 插值
+- 文字渐显目前是整体 Opacity，如需更精细可改为分段渐显（header 先显，info 后显）
+
+### 筛选功能（第 8 步剩余）
+- 需实现年份、车次等级、局段三个筛选维度
+- 筛选条件可组合使用
+- 可参考 FilterChip 或 DropdownButton 实现
 
 ---
 
@@ -127,72 +166,65 @@ List<String> _filteredSeatTypes(String category) {
 
 ### 车型选择器 (train_model_picker.dart)
 - 4级级联联动正常：L1(类别) → L2(平台) → L3(系列) → L4(变体)
-- L4 "无"选项正常：选"无"时 variant 为 null，displayLabel 只显示系列名
-- L1 切换时 L2/L3/L4 正确重置
-- developing 类别（HXD/SS/DF_HXN）点击确认时 toast 提示"功能开发中"
+- L4 "无"选项正常
+- developing 类别点击确认时 toast 提示
 - 初始值回显正常
 
 ### 担当选择器 (bureau_picker.dart)
 - 2级级联联动正常：局 → 客运段
 - L1 切换时 L2 正确重置
-- 空列表显示占位文字
 
 ### 表单布局 (entry_page.dart)
 - 12+ 字段全部布局完成
-- 车次自动识别类型（G→高速动车等）
-- 出发时间 DatePicker + TimePicker
-- EMU 席位过滤正常
+- 车次自动识别类型
+- 编辑模式预填充正常（车型、担当、席位等）
+- 保存逻辑：有 id 更新，无 id 新建
 
 ### 数据库 (trip_provider.dart)
-- ObjectBox 初始化正常（FutureProvider 管理，无循环依赖）
-- 保存功能正常：填写表单 → 保存 → 返回首页 → 计数更新
-- 数据持久化正常：杀死 App → 重启 → 数据仍在
-- CRUD 方法已实现：addTrip / updateTrip / deleteTrip
+- ObjectBox 初始化正常
+- CRUD 全部正常
+- 数据持久化正常
+
+### TripCard 交互 (trip_card.dart)
+- 紧凑卡片布局正常
+- Slidable 左滑编辑、右滑删除正常
+- Slidable 互斥正常（同时只能滑开一张）
+- 点击展开详情动画正常（顶部锚点 + 上浮 + 背景模糊 + 文字渐显）
+- 反向关闭动画正常
+- 避让状态栏正常
+- 荧光色双下划线已修复
+
+### 成就页 (achievement_page.dart)
+- 2×2 网格统计卡片正常（总运转次数 + 总花费金额 + 总运转时长 + 成就系统入口）
+- 成就系统卡片点击进入二级页面
+- 二级页面包含收集者和领航者入口
+- 领航者页面：3列网格勋章展示（1/10/50/100/200/500/1000/5000 次）
+- 收集者页面：占位，显示已收集车型数量
+
+### 动态取色 (main.dart)
+- DynamicColorBuilder 正常提取壁纸色
+- 无动态色时回退 greyLaw
 
 ---
 
-## 下一步计划：第 6 步 数据存取流程闭环
+## 下一步计划
 
-### 需要做的事情
-1. 实现历史记录列表展示（首页下滑展示已保存记录卡片）
-2. 卡片内容：车次、日期、区间、车型、席位
-3. 编辑功能：点击历史记录卡片进入录入页，预填充已有数据，保存时更新而非新建
-4. 删除功能：长按或滑动删除记录
-5. 使用 Riverpod 的 AsyncNotifierProvider 管理数据状态，确保 UI 自动响应数据变化
+### 优先级 1：重新运行 build_runner
+- Trip 模型新增了 `arrivalTime` 字段，必须重新运行 `dart run build_runner build`
+- 否则编译会失败
 
-### 关键设计点
-- 编辑模式：EntryPage 需支持接收 Trip 参数，预填充所有字段
-- 保存逻辑：有 id 则更新（put），无 id 则新建
-- 数据库路径：`应用文档目录/train-ledger/`
+### 优先级 2：第 8 步筛选功能
+- 实现年份、车次等级、局段三个筛选维度
+- 筛选条件可组合使用
+- 考虑使用 FilterChip 或 PopupMenuButton
 
-### Trip 模型字段规划
-| 字段 | 类型 | 说明 |
-|------|------|------|
-| id | int | ObjectBox 自增主键 |
-| trainNo | String | 车次 |
-| boardStation | String | 乘车站 |
-| alightStation | String | 到达站 |
-| originStation | String | 始发站 |
-| destStation | String | 终到站 |
-| departureTime | DateTime | 出发时间 |
-| price | double | 票价（仪表盘"总花费金额"统计源） |
-| trainCategoryKey | String | 车型 L1 key |
-| trainPlatformKey | String? | 车型 L2 key |
-| trainSeriesKey | String? | 车型 L3 key |
-| trainVariant | String? | 车型 L4 变体 |
-| bureauKey | String? | 担当局 |
-| sectionName | String? | 担当段 |
-| seatCategory | String | 席位类别（坐席/卧席） |
-| seatType | String | 席位类型 |
-| remarks | String | 备注 |
+### 优先级 3：第 10 步成就统计完善
+- 收集者页面：车型覆盖率进度条 + 车型图标展示
+- 领航者页面：已基本完成（3列网格勋章展示）
 
-### 仪表盘设计变更（v1.3）
-- 原"总运转里程"已移除（MVP 不记录里程字段）
-- 原"总运转次数"改为"年运转次数"（当前年份的运转次数）
-- 新增"总花费金额"（所有记录的票价累计，单位：元）
-- "已运转车底数量"保持不变
-- 仪表盘采用可扩展卡片式布局，预留后续新增统计维度的开发空间
-- 成就系统"领航者"从里程勋章改为运转次数勋章（1/10/50/100/200/500/1000/5000 次），里程勋章预留后续扩展
+### 优先级 4：修复席位过滤 Bug
+- Coach 时仍显示 EMU 席位
+- 建议方案 A（Chip 组）或方案 C（ValueKey 强制重建）
 
 ---
 
@@ -203,3 +235,16 @@ List<String> _filteredSeatTypes(String category) {
 - GitHub: https://github.com/cheeemmms/Yunntan_Recorder
 - 用户有科学上网工具，网络问题切换代理节点即可
 - Flutter 命令需在外部终端执行（设置 PATH 后）
+
+### 外部终端执行 Flutter 命令的模板
+
+```powershell
+$env:PATH = "D:\Software\Flutter-SDK\flutter\bin;" + $env:PATH; cd "D:\Personal_file\VibeCoding\Program\Yunntan_Recorder"
+
+flutter pub get          # 拉取依赖
+flutter run              # 运行到设备
+flutter run --release    # Release 模式运行
+flutter clean            # 清理构建缓存
+flutter build apk        # 构建 APK
+dart run build_runner build  # ObjectBox 代码生成
+```

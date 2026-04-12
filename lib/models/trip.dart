@@ -14,6 +14,9 @@ class Trip {
   @Property(type: PropertyType.date)
   DateTime departureTime = DateTime.now();
 
+  @Property(type: PropertyType.date)
+  DateTime? arrivalTime;
+
   double price = 0;
 
   String trainCategoryKey = '';
@@ -37,6 +40,7 @@ class Trip {
     this.originStation = '',
     this.destStation = '',
     DateTime? departureTime,
+    this.arrivalTime,
     this.price = 0,
     this.trainCategoryKey = '',
     this.trainPlatformKey,

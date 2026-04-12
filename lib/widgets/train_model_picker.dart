@@ -52,7 +52,7 @@ class TrainModelPicker extends StatefulWidget {
         minChildSize: 0.4,
         maxChildSize: 0.7,
         expand: false,
-        builder: (_, __) => TrainModelPicker(
+        builder: (_, _) => TrainModelPicker(
           hierarchy: hierarchy,
           initialValue: initialValue,
           onConfirm: onConfirm,

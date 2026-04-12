@@ -12,9 +12,9 @@
 | 第二阶段：核心记录表单 | 第 3 步：级联选择器 UI | 🔶 基本完成（有已知Bug） |
 | | 第 4 步：全字段表单布局 | 🔶 基本完成（与第3步合并） |
 | 第三阶段：本地存储引擎 | 第 5 步：ObjectBox 数据库集成 | ✅ 已完成 |
-| | 第 6 步：数据存取流程闭环 | ⬜ 未开始 |
-| 第四阶段：首页总结与列表 | 第 7 步：全屏仪表盘 Dashboard | ⬜ 未开始 |
-| | 第 8 步：历史记录流与筛选 | ⬜ 未开始 |
+| | 第 6 步：数据存取流程闭环 | ✅ 已完成 |
+| 第四阶段：首页总结与列表 | 第 7 步：全屏仪表盘 Dashboard | ✅ 已完成（移至成就页） |
+| | 第 8 步：历史记录流与筛选 | 🔶 部分完成（列表+卡片+滑动操作，筛选待开发） |
 | 第五阶段：成就感与图库 | 第 9 步：车型照片映射系统 | ⬜ 未开始 |
 | | 第 10 步：成就统计页面 | ⬜ 未开始 |
 | 第六阶段：数据导出与分享 | 第 11 步：CSV 导出功能 | ⬜ 未开始 |
@@ -51,6 +51,8 @@
 - `objectbox: ^5.2.0` — NoSQL 本地数据库
 - `objectbox_flutter_libs: ^5.2.0` — ObjectBox Flutter 平台库
 - `path_provider: ^2.1.0` — 应用文档目录路径
+- `flutter_slidable: ^4.0.0` — 滑动操作（左滑编辑、右滑删除）
+- `dynamic_color: ^1.7.0` — Material You 动态取色（壁纸色适配）
 
 **开发依赖：**
 - `freezed: ^3.2.5` — 不可变数据类代码生成
@@ -126,6 +128,123 @@ flutter build apk        # 构建 APK
 ---
 
 ## 变更日志
+
+### 2026-04-12 (第十三次更新) — 到达时间 + 成就页改造
+
+**数据模型变更：Trip 新增 arrivalTime 字段**
+- `lib/models/trip.dart`：新增 `DateTime? arrivalTime` 字段（ObjectBox @Property(type: PropertyType.date)）
+- 需重新运行 `dart run build_runner build` 生成 ObjectBox 代码
+
+**录入页新增到达时间选择器**
+- `lib/pages/entry_page.dart`：在出发时间下方新增到达时间选择器
+- 支持日期+时间选择，可清除（设为 null），编辑模式预填充
+- 到达时间为可选字段，未填写时显示"未填写"
+
+**首页条目排版调整**
+- `lib/widgets/trip_card.dart`：_buildCompact 方法改造
+- 左侧时间区域：日期 → 出发时间 → Icon(Icons.south) → 到达时间
+- 跨天处理：到达时间前显示小字"+1"（浅色，紧贴时间，水平对齐）
+- 无到达时间时不显示箭头和到达时间
+
+**详情卡片排版调整**
+- `_TicketContent._buildHeader`：时间显示从 `12:56` 改为 `12:56→13:00`
+- 箭头上方小字显示自动计算的时长（如"4分钟"、"2小时30分钟"）
+- 跨天处理：到达时间前显示小字"+N"
+- 未填到达时间时仅显示出发时间（保持原样）
+- 动画系统未改动
+
+**成就页改造**
+- `lib/pages/achievement_page.dart`：完全重写
+- 2×2 网格布局：总运转次数 / 总花费金额 / 总运转时长 / 成就系统
+- 总运转时长：自动计算所有有到达时间的运转记录的时长总和
+- 成就系统卡片：点击进入二级页面（_AchievementDetailPage）
+- 二级页面包含收集者（车型覆盖率）和领航者（运转次数勋章）入口
+- 领航者页面：3列网格展示 1/10/50/100/200/500/1000/5000 次勋章
+- 收集者页面：占位，显示已收集车型数量
+
+### 2026-04-12 (第十二次更新) — UI 重设计 + 动画系统 + 数据闭环
+
+**重大架构变更：首页与成就页重新分工**
+
+原设计：首页 = 仪表盘 + 历史列表；成就页 = 成就系统
+新设计：首页 = 纯运转记录列表（卡片式）；成就页 = 仪表盘统计 + 成就系统
+
+**第 6 步：数据存取流程闭环 ✅**
+- 编辑功能：点击历史记录卡片 → 进入 EntryPage 预填充已有数据 → 保存时更新
+- 删除功能：右滑卡片显示删除按钮 → 确认弹窗 → 删除记录
+- EntryPage 支持接收 Trip 参数，编辑模式下预填充所有字段（含车型选择器、担当选择器）
+- 保存逻辑：有 id 则 updateTrip，无 id 则 addTrip
+
+**第 7 步：仪表盘 Dashboard ✅（移至成就页）**
+- 统计指标：总运转次数、总花费金额（横向双卡片布局）
+- 使用 IntrinsicHeight 确保双卡片等高
+- primaryContainer / secondaryContainer 配色区分两张卡片
+- FittedBox + scaleDown 确保大数字不溢出
+
+**第 8 步：历史记录流 🔶（部分完成）**
+- ✅ ListView.builder 展示运转记录卡片（按时间倒序）
+- ✅ TripCard 紧凑布局：日期时间 | 车次+类型标签 | 区间 | 车底标签
+- ✅ Slidable 滑动操作：左滑编辑、右滑删除（BehindMotion，圆角12）
+- ✅ Slidable 互斥：同一时间只能滑开一张卡片
+- ✅ 点击卡片展开详情（Overlay 火车票样式）
+- ⬜ 筛选功能（年份/车次等级/局段）待开发
+
+**TripCard 动画系统（核心实现）**
+
+动画架构：AnimationController 500ms + 4 条独立进度曲线
+
+| 进度函数 | 时长 | 曲线 | 控制对象 |
+|----------|------|------|----------|
+| `_bgProgress` | 0-300ms | easeOut | 背景压暗 + 高斯模糊 |
+| `_floatProgress` | 0-300ms | easeOutCubic | 卡片上浮 10dp |
+| `_fadeProgress` | 0-300ms | easeOut | 文字渐显 |
+| `_expandProgress` | 0-500ms | easeOutCubic | 卡片宽度/圆角/阴影展开 |
+
+动画分层设计（遵循 MD3 Motion 规范）：
+1. **0-300ms**：背景压暗+模糊、卡片上浮、文字渐显 三者同步完成
+2. **0-500ms**：卡片容器从条目位置平滑展开到目标宽度 88% 屏幕
+3. **展开方向**：以条目顶部为锚点向下展开，同时略微上浮 10dp
+4. **内容揭示**：容器 clipBehavior: Clip.antiAlias 裁剪，内容始终渲染，整体 Opacity 渐显
+5. **反向动画**：沿原路径返回，动画对称流畅
+
+Overlay 实现：
+- 使用 RenderBox.localToGlobal 获取条目在屏幕中的精确位置
+- OverlayEntry 插入全屏层，Stack 布局：底层 BackdropFilter + 上层 Positioned 卡片
+- 避让状态栏：`minTop = statusBarTop + 16`
+- 点击背景关闭：GestureDetector.onTap → reverse 动画 → 移除 OverlayEntry
+
+**Material You 动态取色**
+- 引入 `dynamic_color: ^1.7.0`
+- DynamicColorBuilder 包裹 MaterialApp，从壁纸提取 ColorScheme
+- 有动态色时覆盖 FlexThemeData 的 colorScheme，无动态色时回退 greyLaw
+
+**已修复的问题**
+
+| 问题 | 解决方案 |
+|------|----------|
+| 主题不跟随壁纸色 | 引入 dynamic_color 包，DynamicColorBuilder 提取壁纸色覆盖 colorScheme |
+| SlidableController 构造函数需要 TickerProvider | 从 GlobalKey\<SlidableState\> 改为 SlidableController(this) |
+| 多个 AnimationController 导致 ticker 冲突 | SingleTickerProviderStateMixin → TickerProviderStateMixin |
+| HomePage 无法访问 _TripCardState 私有类 | 实现 RegisterCloseCallback typedef，避免直接访问私有 State |
+| Slidable 不互斥（多张卡片可同时滑开） | 回调注册模式：新卡片滑开时先关闭上一张 |
+| 左滑后大幅右滑直接跳到删除按钮 | Slidable v4 默认行为，符合预期（先回到初始状态需用户自行控制滑动幅度） |
+| 荧光色双下划线（debug 和 release 均出现） | 所有 TextStyle 显式设置 `decoration: TextDecoration.none` |
+| 第一条条目滑动抽动 | 移除 initState 中过早的 registerClose 调用，仅在 slider 实际打开时注册 |
+| 卡片展开侵入状态栏 | 计算 statusBarTop，设置 minTop = statusBarTop + 16 |
+| 卡片从无限远放大 | 使用 RenderBox 获取条目精确位置作为动画起点 |
+| 卡片向上移动后向下展开 | 改为以条目顶部为锚点向下展开 + 上浮 10dp |
+| 成就页卡片高度不一致 | IntrinsicHeight 包裹 Row |
+| 编辑模式不预填车型和担当 | EntryPage 接收 Trip 参数时解析 trainModel/bureau 并设置初始值 |
+
+**新增/修改文件清单**
+
+| 文件 | 操作 | 说明 |
+|------|------|------|
+| `lib/widgets/trip_card.dart` | 新增 | TripCard 组件 + _TicketOverlay + _TicketContent，含完整动画系统 |
+| `lib/pages/achievement_page.dart` | 重写 | 仪表盘统计（总运转次数+总花费金额）+ 成就系统占位 |
+| `lib/main.dart` | 重写 | DynamicColorBuilder + HomePage 纯列表 + Slidable 互斥 + MainShell 导航 |
+| `lib/pages/entry_page.dart` | 修改 | 编辑模式预填充逻辑（车型选择器、担当选择器初始值） |
+| `pubspec.yaml` | 修改 | 新增 flutter_slidable ^4.0.0、dynamic_color ^1.7.0 |
 
 ### 2026-04-11 (第十一次更新)
 - 第 5 步 ObjectBox 数据库集成完成，验证通过
