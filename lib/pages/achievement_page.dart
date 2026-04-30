@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../models/train_hierarchy.dart';
 import '../models/trip.dart';
+import '../providers/train_data_provider.dart';
 import '../providers/trip_provider.dart';
 
 class AchievementPage extends ConsumerWidget {
@@ -342,44 +344,22 @@ class _CollectorPage extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
     final tripListAsync = ref.watch(tripListProvider);
+    final hierarchyAsync = ref.watch(trainHierarchyProvider);
 
     return Scaffold(
       appBar: AppBar(title: const Text('收集者')),
       body: tripListAsync.when(
-        data: (trips) {
-          final collected = <String>{};
-          for (final t in trips) {
-            final key = _buildModelKey(t);
-            if (key.isNotEmpty) collected.add(key);
-          }
-
-          return Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(
-                  Icons.directions_train,
-                  size: 64,
-                  color: theme.colorScheme.onSurfaceVariant,
-                ),
-                const SizedBox(height: 16),
-                Text(
-                  '已收集 ${collected.length} 种车型',
-                  style: theme.textTheme.titleMedium?.copyWith(
-                    color: theme.colorScheme.onSurfaceVariant,
-                  ),
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  '详细统计开发中',
-                  style: theme.textTheme.bodyMedium?.copyWith(
-                    color: theme.colorScheme.onSurfaceVariant,
-                  ),
-                ),
-              ],
+        data: (trips) => hierarchyAsync.when(
+          data: (hierarchy) => _buildBody(context, trips, hierarchy),
+          loading: () =>
+              const Center(child: CircularProgressIndicator(strokeWidth: 2)),
+          error: (_, __) => Center(
+            child: Text(
+              '加载失败',
+              style: TextStyle(color: theme.colorScheme.error),
             ),
-          );
-        },
+          ),
+        ),
         loading: () =>
             const Center(child: CircularProgressIndicator(strokeWidth: 2)),
         error: (_, __) => Center(
@@ -389,13 +369,192 @@ class _CollectorPage extends ConsumerWidget {
     );
   }
 
+  Widget _buildBody(
+    BuildContext context,
+    List<Trip> trips,
+    TrainHierarchy hierarchy,
+  ) {
+    final theme = Theme.of(context);
+    final cs = theme.colorScheme;
+
+    final collectedKeys = <String>{};
+    for (final t in trips) {
+      final key = _buildModelKey(t);
+      if (key.isNotEmpty) collectedKeys.add(key);
+    }
+
+    final allModels = _buildAllModelList(hierarchy);
+    final total = allModels.length;
+    final collected = total > 0
+        ? allModels.where((m) => collectedKeys.contains(m.key)).length
+        : 0;
+    final ratio = total > 0 ? collected / total : 0.0;
+
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _buildProgressCard(cs, collected, total, ratio),
+          const SizedBox(height: 16),
+          Text(
+            '全车型一览',
+            style: theme.textTheme.titleSmall?.copyWith(color: cs.primary),
+          ),
+          const SizedBox(height: 12),
+          _buildModelGrid(allModels, collectedKeys, cs),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildProgressCard(
+    ColorScheme cs,
+    int collected,
+    int total,
+    double ratio,
+  ) {
+    return Card(
+      color: cs.primaryContainer,
+      child: Padding(
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Icon(Icons.directions_train, color: cs.onPrimaryContainer),
+                const SizedBox(width: 8),
+                Text(
+                  '收集进度',
+                  style: TextStyle(
+                    color: cs.onPrimaryContainer,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+            ClipRRect(
+              borderRadius: BorderRadius.circular(4),
+              child: LinearProgressIndicator(
+                value: ratio,
+                minHeight: 8,
+                backgroundColor: cs.primaryContainer,
+                valueColor: AlwaysStoppedAnimation(cs.onPrimaryContainer),
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              '${(ratio * 100).toStringAsFixed(1)}%（$collected / $total 种）',
+              style: TextStyle(color: cs.onPrimaryContainer, fontSize: 13),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildModelGrid(
+    List<_ModelEntry> allModels,
+    Set<String> collectedKeys,
+    ColorScheme cs,
+  ) {
+    return Wrap(
+      spacing: 8,
+      runSpacing: 8,
+      children: allModels.map((model) {
+        final isCollected = collectedKeys.contains(model.key);
+        return Container(
+          width: 88,
+          padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 4),
+          decoration: BoxDecoration(
+            color: isCollected ? cs.primaryContainer : cs.surfaceContainerLow,
+            borderRadius: BorderRadius.circular(8),
+            border: Border.all(
+              color: isCollected ? cs.outline : cs.outlineVariant,
+              width: 0.5,
+            ),
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(
+                isCollected
+                    ? Icons.directions_train
+                    : Icons.directions_train_outlined,
+                size: 22,
+                color: isCollected
+                    ? cs.onPrimaryContainer
+                    : cs.onSurfaceVariant,
+              ),
+              const SizedBox(height: 4),
+              Text(
+                model.label,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(
+                  fontSize: 11,
+                  fontWeight: isCollected ? FontWeight.w600 : FontWeight.normal,
+                  color: isCollected
+                      ? cs.onPrimaryContainer
+                      : cs.onSurfaceVariant,
+                ),
+              ),
+            ],
+          ),
+        );
+      }).toList(),
+    );
+  }
+
+  List<_ModelEntry> _buildAllModelList(TrainHierarchy hierarchy) {
+    final entries = <_ModelEntry>[];
+    for (final cat in hierarchy.availableCategories) {
+      for (final platform in cat.platforms.values) {
+        if (platform.series.isNotEmpty) {
+          for (final series in platform.series.values) {
+            final key = '${platform.key} ${series.key}';
+            entries.add(
+              _ModelEntry(
+                key: key,
+                label: series.label,
+                categoryLabel: cat.label,
+              ),
+            );
+          }
+        } else {
+          entries.add(
+            _ModelEntry(
+              key: platform.key,
+              label: platform.label,
+              categoryLabel: cat.label,
+            ),
+          );
+        }
+      }
+    }
+    return entries;
+  }
+
   String _buildModelKey(Trip t) {
     final parts = <String>[];
     if (t.trainPlatformKey != null) parts.add(t.trainPlatformKey!);
     if (t.trainSeriesKey != null) parts.add(t.trainSeriesKey!);
-    if (t.trainVariant != null) parts.add(t.trainVariant!);
     return parts.join(' ');
   }
+}
+
+class _ModelEntry {
+  final String key;
+  final String label;
+  final String categoryLabel;
+
+  const _ModelEntry({
+    required this.key,
+    required this.label,
+    required this.categoryLabel,
+  });
 }
 
 class _NavigatorPage extends StatelessWidget {

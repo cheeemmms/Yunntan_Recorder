@@ -316,7 +316,7 @@ class _EntryPageState extends ConsumerState<EntryPage> {
                         setState(() => _seatType = v!);
                       },
                       key: ValueKey(
-                        'seat_${_trainModel?.category.type ?? 'none'}',
+                        'seat_${_trainModel?.category.type ?? 'none'}_${_seatCategory}_${_filteredSeatTypes(_seatCategory).length}',
                       ),
                     ),
                   ),
