@@ -497,7 +497,7 @@ class _CollectorPage extends ConsumerWidget {
 
   static const _silhouettePath = 'assets/images/silhouette.png';
 
-  String _photoPath(String key) => 'assets/images/models/${key.replaceAll(' ', '_')}.jpg';
+  String _photoPath(String key) => 'assets/images/models/${key.replaceAll(' ', '_')}.png';
 
   Widget _buildModelGrid(
     List<_ModelEntry> allModels,
