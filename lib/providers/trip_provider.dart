@@ -2,6 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 
+import '../data/seed_data.dart';
 import '../models/trip.dart';
 import '../objectbox.g.dart';
 
@@ -9,8 +10,7 @@ final objectBoxProvider = FutureProvider<ObjectBoxInstance>((ref) async {
   return ObjectBoxInstance.create();
 });
 
-final tripListProvider =
-    AsyncNotifierProvider<TripListNotifier, List<Trip>>(
+final tripListProvider = AsyncNotifierProvider<TripListNotifier, List<Trip>>(
   TripListNotifier.new,
 );
 
@@ -53,6 +53,15 @@ class TripListNotifier extends AsyncNotifier<List<Trip>> {
     objectBox.tripBox.put(trip);
     state = AsyncData(objectBox.tripBox.getAll());
     return true;
+  }
+
+  Future<void> seedTestData() async {
+    final objectBox = await ref.read(objectBoxProvider.future);
+    final trips = SeedDataGenerator.generate(100);
+    for (final trip in trips) {
+      objectBox.tripBox.put(trip);
+    }
+    state = AsyncData(objectBox.tripBox.getAll());
   }
 
   Future<bool> deleteTrip(int id) async {

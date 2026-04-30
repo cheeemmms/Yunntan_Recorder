@@ -286,6 +286,14 @@ class _HomePageState extends ConsumerState<HomePage> {
                       color: theme.colorScheme.onSurfaceVariant,
                     ),
                   ),
+                  const SizedBox(height: 16),
+                  OutlinedButton.icon(
+                    onPressed: () async {
+                      await ref.read(tripListProvider.notifier).seedTestData();
+                    },
+                    icon: const Icon(Icons.auto_awesome, size: 18),
+                    label: const Text('生成 100 条测试数据'),
+                  ),
                 ],
               ),
             );
