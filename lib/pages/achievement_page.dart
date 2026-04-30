@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../models/train_hierarchy.dart';
 import '../models/trip.dart';
@@ -455,57 +456,97 @@ class _CollectorPage extends ConsumerWidget {
     );
   }
 
+  static const _modelUrls = {
+    'CR450 AF': 'https://www.china-emu.cn/Trains/Model/CR450AF',
+  };
+
   Widget _buildModelGrid(
     List<_ModelEntry> allModels,
     Set<String> collectedKeys,
     ColorScheme cs,
   ) {
-    return Wrap(
-      spacing: 8,
-      runSpacing: 8,
-      children: allModels.map((model) {
+    return GridView.builder(
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: 2,
+        mainAxisSpacing: 12,
+        crossAxisSpacing: 12,
+        childAspectRatio: 1.1,
+      ),
+      itemCount: allModels.length,
+      itemBuilder: (_, index) {
+        final model = allModels[index];
         final isCollected = collectedKeys.contains(model.key);
-        return Container(
-          width: 88,
-          padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 4),
-          decoration: BoxDecoration(
-            color: isCollected ? cs.primaryContainer : cs.surfaceContainerLow,
-            borderRadius: BorderRadius.circular(8),
-            border: Border.all(
-              color: isCollected ? cs.outline : cs.outlineVariant,
-              width: 0.5,
-            ),
-          ),
+        return _buildModelCard(model, isCollected, cs);
+      },
+    );
+  }
+
+  Widget _buildModelCard(_ModelEntry model, bool isCollected, ColorScheme cs) {
+    return Card(
+      color: isCollected ? cs.primaryContainer : cs.surfaceContainerLow,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12),
+        side: BorderSide(
+          color: isCollected ? cs.outline : cs.outlineVariant,
+          width: 0.5,
+        ),
+      ),
+      child: InkWell(
+        onTap: () => _onModelTap(model),
+        borderRadius: BorderRadius.circular(12),
+        child: Padding(
+          padding: const EdgeInsets.all(16),
           child: Column(
-            mainAxisSize: MainAxisSize.min,
+            mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Icon(
                 isCollected
                     ? Icons.directions_train
                     : Icons.directions_train_outlined,
-                size: 22,
+                size: 40,
                 color: isCollected
                     ? cs.onPrimaryContainer
                     : cs.onSurfaceVariant,
               ),
-              const SizedBox(height: 4),
+              const SizedBox(height: 8),
               Text(
                 model.label,
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
                 style: TextStyle(
-                  fontSize: 11,
-                  fontWeight: isCollected ? FontWeight.w600 : FontWeight.normal,
+                  fontSize: 14,
+                  fontWeight: isCollected ? FontWeight.w700 : FontWeight.w500,
                   color: isCollected
                       ? cs.onPrimaryContainer
                       : cs.onSurfaceVariant,
                 ),
               ),
+              const SizedBox(height: 2),
+              Text(
+                model.categoryLabel,
+                style: TextStyle(
+                  fontSize: 11,
+                  color: isCollected
+                      ? cs.onPrimaryContainer.withOpacity(0.7)
+                      : cs.onSurfaceVariant.withOpacity(0.6),
+                ),
+              ),
             ],
           ),
-        );
-      }).toList(),
+        ),
+      ),
     );
+  }
+
+  Future<void> _onModelTap(_ModelEntry model) async {
+    final url = _modelUrls[model.key];
+    if (url == null) return;
+    final uri = Uri.parse(url);
+    if (await canLaunchUrl(uri)) {
+      await launchUrl(uri, mode: LaunchMode.platformDefault);
+    }
   }
 
   List<_ModelEntry> _buildAllModelList(TrainHierarchy hierarchy) {
