@@ -458,7 +458,46 @@ class _CollectorPage extends ConsumerWidget {
 
   static const _modelUrls = {
     'CR450 AF': 'https://www.china-emu.cn/Trains/Model/CR450AF',
+    'CR450 BF': 'https://www.china-emu.cn/Trains/Model/CR450BF',
+    'CR400 AF': 'https://www.china-emu.cn/Trains/Model/Detail-12002-101-S.html',
+    'CR400 BF': 'https://www.china-emu.cn/Trains/Model/Detail-13032-101-S.html',
+    'CR300 AF': 'https://www.china-emu.cn/Trains/Model/Detail-11032-101-S.html',
+    'CR300 BF': 'https://www.china-emu.cn/Trains/Model/Detail-11036-101-S.html',
+    'CR220J 1': 'https://www.china-emu.cn/Trains/Model/Detail-10302-101-S.html',
+    'CR220J 3': 'https://www.china-emu.cn/Trains/Model/Detail-10304-101-S.html',
+    'CR200J-1 1-A': 'https://www.china-emu.cn/Trains/Model/Detail-10021-101-S.html',
+    'CR200J-1 2-A': 'https://www.china-emu.cn/Trains/Model/Detail-10023-101-S.html',
+    'CR200J-1 3-A': 'https://www.china-emu.cn/Trains/Model/Detail-10025-101-S.html',
+    'CR200J-2 1-B': 'https://www.china-emu.cn/Trains/Model/Detail-10051-101-S.html',
+    'CR200J-2 2-B': 'https://www.china-emu.cn/Trains/Model/Detail-10053-101-S.html',
+    'CR200J-2 3-B': 'https://www.china-emu.cn/Trains/Model/Detail-10055-101-S.html',
+    'CR200J-2 S-G': 'https://www.china-emu.cn/Trains/Model/Detail-10058-106-S.html',
+    'CR200J-3 1-C': 'https://www.china-emu.cn/Trains/Model/Detail-10101-101-S.html',
+    'CR200J-3 1-D': 'https://www.china-emu.cn/Trains/Model/Detail-10103-101-S.html',
+    'CR200J-3 2-C': 'https://www.china-emu.cn/Trains/Model/Detail-10105-102-S.html',
+    'CR200J-3 3-C': 'https://www.china-emu.cn/Trains/Model/Detail-10111-101-S.html',
+    'CRH380 A': 'https://www.china-emu.cn/Trains/Model/Detail-30001-101-S.html',
+    'CRH380 B': 'https://www.china-emu.cn/Trains/Model/Detail-31002-101-S.html',
+    'CRH380 CL': 'https://www.china-emu.cn/Trains/Model/Detail-31010-101-S.html',
+    'CRH380 D': 'https://www.china-emu.cn/Trains/Model/Detail-32001-101-S.html',
+    'CRH1 A': 'https://www.china-emu.cn/Trains/Model/Detail-21001-101-S.html',
+    'CRH1 B': 'https://www.china-emu.cn/Trains/Model/Detail-21003-101-S.html',
+    'CRH1 E': 'https://www.china-emu.cn/Trains/Model/Detail-21004-102-S.html',
+    'CRH2 A': 'https://www.china-emu.cn/Trains/Model/Detail-22001-101-S.html',
+    'CRH2 B': 'https://www.china-emu.cn/Trains/Model/Detail-22004-101-S.html',
+    'CRH2 E': 'https://www.china-emu.cn/Trains/Model/Detail-22010-102-S.html',
+    'CRH2 C': 'https://www.china-emu.cn/Trains/Model/Detail-22006-101-S.html',
+    'CRH3 C': 'https://www.china-emu.cn/Trains/Model/Detail-23011-101-S.html',
+    'CRH3 A': 'https://www.china-emu.cn/Trains/Model/Detail-23002-101-S.html',
+    'CRH5 A': 'https://www.china-emu.cn/Trains/Model/Detail-25001-101-S.html',
+    'CRH5 G': 'https://www.china-emu.cn/Trains/Model/Detail-25004-101-S.html',
+    'CRH5 E': 'https://www.china-emu.cn/Trains/Model/Detail-25002-102-S.html',
+    'CRH6 A': 'https://www.china-emu.cn/Trains/Model/Detail-26001-201-S.html',
   };
+
+  static const _silhouettePath = 'assets/images/silhouette.png';
+
+  String _photoPath(String key) => 'assets/images/models/${key.replaceAll(' ', '_')}.jpg';
 
   Widget _buildModelGrid(
     List<_ModelEntry> allModels,
@@ -484,6 +523,7 @@ class _CollectorPage extends ConsumerWidget {
   }
 
   Widget _buildModelCard(_ModelEntry model, bool isCollected, ColorScheme cs) {
+    final onColor = isCollected ? cs.onPrimaryContainer : cs.onSurfaceVariant;
     return Card(
       color: isCollected ? cs.primaryContainer : cs.surfaceContainerLow,
       shape: RoundedRectangleBorder(
@@ -497,40 +537,45 @@ class _CollectorPage extends ConsumerWidget {
         onTap: () => _onModelTap(model),
         borderRadius: BorderRadius.circular(12),
         child: Padding(
-          padding: const EdgeInsets.all(16),
+          padding: const EdgeInsets.all(12),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Icon(
-                isCollected
-                    ? Icons.directions_train
-                    : Icons.directions_train_outlined,
-                size: 40,
-                color: isCollected
-                    ? cs.onPrimaryContainer
-                    : cs.onSurfaceVariant,
+              Expanded(
+                child: ClipRRect(
+                  borderRadius: const BorderRadius.vertical(
+                    top: Radius.circular(8),
+                  ),
+                  child: Image.asset(
+                    _photoPath(model.key),
+                    fit: BoxFit.cover,
+                    width: double.infinity,
+                    errorBuilder: (_, __, ___) => Icon(
+                      isCollected
+                          ? Icons.directions_train
+                          : Icons.directions_train_outlined,
+                      size: 36,
+                      color: onColor,
+                    ),
+                  ),
+                ),
               ),
-              const SizedBox(height: 8),
+              const SizedBox(height: 6),
               Text(
                 model.label,
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
                 style: TextStyle(
-                  fontSize: 14,
+                  fontSize: 13,
                   fontWeight: isCollected ? FontWeight.w700 : FontWeight.w500,
-                  color: isCollected
-                      ? cs.onPrimaryContainer
-                      : cs.onSurfaceVariant,
+                  color: onColor,
                 ),
               ),
-              const SizedBox(height: 2),
               Text(
                 model.categoryLabel,
                 style: TextStyle(
-                  fontSize: 11,
-                  color: isCollected
-                      ? cs.onPrimaryContainer.withOpacity(0.7)
-                      : cs.onSurfaceVariant.withOpacity(0.6),
+                  fontSize: 10,
+                  color: onColor.withOpacity(0.7),
                 ),
               ),
             ],
