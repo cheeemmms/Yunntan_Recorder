@@ -155,7 +155,6 @@ class _BureauPickerState extends State<BureauPicker> {
 
     return Expanded(
       child: CupertinoPicker(
-        key: ValueKey(items.hashCode),
         itemExtent: 36,
         scrollController: FixedExtentScrollController(initialItem: safeIndex),
         onSelectedItemChanged: onChanged,

@@ -33,6 +33,7 @@ class _EntryPageState extends ConsumerState<EntryPage> {
   String _seatType = '二等座';
   DateTime _departureTime = DateTime.now();
   DateTime? _arrivalTime;
+  bool _initDone = false;
 
   bool get _isEditing => widget.trip != null && widget.trip!.id > 0;
 
@@ -111,62 +112,52 @@ class _EntryPageState extends ConsumerState<EntryPage> {
     final bureauAsync = ref.watch(railwayBureauProvider);
     final trainType = _inferTrainType(_trainNoCtrl.text);
 
-    if (_isEditing && _trainModel == null) {
-      hierarchyAsync.whenData((hierarchy) {
-        final trip = widget.trip!;
-        final category = hierarchy.getCategory(trip.trainCategoryKey);
-        if (category != null) {
-          TrainPlatform? platform;
-          TrainSeries? series;
-          if (trip.trainPlatformKey != null) {
-            platform = category.platforms[trip.trainPlatformKey];
-          }
-          if (platform != null && trip.trainSeriesKey != null) {
-            series = platform.series[trip.trainSeriesKey];
-          }
-          if (series != null || platform != null) {
-            WidgetsBinding.instance.addPostFrameCallback((_) {
-              if (mounted)
-                setState(
-                  () => _trainModel = TrainModelPickerResult(
-                    category: category,
-                    platform: platform,
-                    series: series,
-                    variant: trip.trainVariant,
-                  ),
-                );
-            });
-          }
-        }
-      });
-    }
+    if (_isEditing &&
+        !_initDone &&
+        hierarchyAsync.hasValue &&
+        bureauAsync.hasValue) {
+      _initDone = true;
+      final trip = widget.trip!;
+      final hierarchy = hierarchyAsync.value!;
+      final bureauData = bureauAsync.value!;
 
-    if (_isEditing && _bureau == null) {
-      bureauAsync.whenData((bureauData) {
-        final trip = widget.trip!;
-        if (trip.bureauKey != null) {
-          final bureau = bureauData.getBureau(trip.bureauKey!);
-          if (bureau != null && trip.sectionName != null) {
-            final section = bureau.passengerSections
-                .cast<BureauSection?>()
-                .firstWhere(
-                  (s) => s?.name == trip.sectionName,
-                  orElse: () => null,
-                );
-            if (section != null) {
-              WidgetsBinding.instance.addPostFrameCallback((_) {
-                if (mounted)
-                  setState(
-                    () => _bureau = BureauPickerResult(
-                      bureauKey: trip.bureauKey!,
-                      section: section,
-                    ),
-                  );
-              });
-            }
+      final category = hierarchy.getCategory(trip.trainCategoryKey);
+      if (category != null) {
+        TrainPlatform? platform;
+        TrainSeries? series;
+        if (trip.trainPlatformKey != null) {
+          platform = category.platforms[trip.trainPlatformKey];
+        }
+        if (platform != null && trip.trainSeriesKey != null) {
+          series = platform.series[trip.trainSeriesKey];
+        }
+        if (series != null || platform != null) {
+          _trainModel = TrainModelPickerResult(
+            category: category,
+            platform: platform,
+            series: series,
+            variant: trip.trainVariant,
+          );
+        }
+      }
+
+      if (trip.bureauKey != null) {
+        final bureau = bureauData.getBureau(trip.bureauKey!);
+        if (bureau != null && trip.sectionName != null) {
+          final section = bureau.passengerSections
+              .cast<BureauSection?>()
+              .firstWhere(
+                (s) => s?.name == trip.sectionName,
+                orElse: () => null,
+              );
+          if (section != null) {
+            _bureau = BureauPickerResult(
+              bureauKey: trip.bureauKey!,
+              section: section,
+            );
           }
         }
-      });
+      }
     }
 
     return Scaffold(

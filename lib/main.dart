@@ -294,15 +294,18 @@ class _HomePageState extends ConsumerState<HomePage> {
             ..sort((a, b) => b.departureTime.compareTo(a.departureTime));
           final filtered = _hasActiveFilter ? _applyFilters(sorted) : sorted;
 
+          final currentIds = filtered.map((t) => t.id).toSet();
+          _cardKeys.removeWhere((id, _) => !currentIds.contains(id));
+
           return Column(
             children: [
-              AnimatedSize(
+              AnimatedCrossFade(
                 duration: const Duration(milliseconds: 250),
-                curve: Curves.easeInOut,
-                alignment: Alignment.topCenter,
-                child: _filterExpanded
-                    ? _buildFilterPanel(theme, sorted)
-                    : const SizedBox.shrink(),
+                crossFadeState: _filterExpanded
+                    ? CrossFadeState.showFirst
+                    : CrossFadeState.showSecond,
+                firstChild: _buildFilterPanel(theme, sorted),
+                secondChild: const SizedBox.shrink(),
               ),
               Expanded(
                 child: filtered.isEmpty
@@ -466,23 +469,16 @@ class _HomePageState extends ConsumerState<HomePage> {
     required VoidCallback onTap,
   }) {
     final hasSelection = values.isNotEmpty;
+    final cs = Theme.of(context).colorScheme;
     return InputChip(
       selected: hasSelection,
       label: Text(hasSelection ? '$label(${values.length})' : label),
       onPressed: onTap,
       onDeleted: hasSelection ? onClear : null,
-      selectedColor: Theme.of(context).colorScheme.primaryContainer,
+      selectedColor: cs.primaryContainer,
       backgroundColor: Colors.transparent,
-      side: BorderSide(
-        color: hasSelection
-            ? Theme.of(context).colorScheme.outline
-            : Theme.of(context).colorScheme.outlineVariant,
-      ),
-      labelStyle: TextStyle(
-        color: hasSelection
-            ? Theme.of(context).colorScheme.onSurface
-            : Theme.of(context).colorScheme.onSurface,
-      ),
+      side: BorderSide(color: hasSelection ? cs.outline : cs.outlineVariant),
+      labelStyle: TextStyle(color: cs.onSurface),
     );
   }
 
@@ -492,6 +488,7 @@ class _HomePageState extends ConsumerState<HomePage> {
   }) {
     final hasSelection =
         _filterCategories.isNotEmpty || _filterPlatforms.isNotEmpty;
+    final cs = Theme.of(context).colorScheme;
     return InputChip(
       selected: hasSelection,
       label: Text(
@@ -510,14 +507,10 @@ class _HomePageState extends ConsumerState<HomePage> {
               _filterPlatforms.clear();
             })
           : null,
-      selectedColor: Theme.of(context).colorScheme.primaryContainer,
+      selectedColor: cs.primaryContainer,
       backgroundColor: Colors.transparent,
-      side: BorderSide(
-        color: hasSelection
-            ? Theme.of(context).colorScheme.outline
-            : Theme.of(context).colorScheme.outlineVariant,
-      ),
-      labelStyle: TextStyle(color: Theme.of(context).colorScheme.onSurface),
+      side: BorderSide(color: hasSelection ? cs.outline : cs.outlineVariant),
+      labelStyle: TextStyle(color: cs.onSurface),
     );
   }
 

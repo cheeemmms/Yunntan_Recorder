@@ -364,7 +364,7 @@ class _CollectorPage extends ConsumerWidget {
                 ),
                 const SizedBox(height: 16),
                 Text(
-                  '已收集 $collected 种车型',
+                  '已收集 ${collected.length} 种车型',
                   style: theme.textTheme.titleMedium?.copyWith(
                     color: theme.colorScheme.onSurfaceVariant,
                   ),
