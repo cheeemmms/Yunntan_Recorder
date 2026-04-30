@@ -465,20 +465,32 @@ class _CollectorPage extends ConsumerWidget {
     'CR300 BF': 'https://www.china-emu.cn/Trains/Model/Detail-11036-101-S.html',
     'CR220J 1': 'https://www.china-emu.cn/Trains/Model/Detail-10302-101-S.html',
     'CR220J 3': 'https://www.china-emu.cn/Trains/Model/Detail-10304-101-S.html',
-    'CR200J-1 1-A': 'https://www.china-emu.cn/Trains/Model/Detail-10021-101-S.html',
-    'CR200J-1 2-A': 'https://www.china-emu.cn/Trains/Model/Detail-10023-101-S.html',
-    'CR200J-1 3-A': 'https://www.china-emu.cn/Trains/Model/Detail-10025-101-S.html',
-    'CR200J-2 1-B': 'https://www.china-emu.cn/Trains/Model/Detail-10051-101-S.html',
-    'CR200J-2 2-B': 'https://www.china-emu.cn/Trains/Model/Detail-10053-101-S.html',
-    'CR200J-2 3-B': 'https://www.china-emu.cn/Trains/Model/Detail-10055-101-S.html',
-    'CR200J-2 S-G': 'https://www.china-emu.cn/Trains/Model/Detail-10058-106-S.html',
-    'CR200J-3 1-C': 'https://www.china-emu.cn/Trains/Model/Detail-10101-101-S.html',
-    'CR200J-3 1-D': 'https://www.china-emu.cn/Trains/Model/Detail-10103-101-S.html',
-    'CR200J-3 2-C': 'https://www.china-emu.cn/Trains/Model/Detail-10105-102-S.html',
-    'CR200J-3 3-C': 'https://www.china-emu.cn/Trains/Model/Detail-10111-101-S.html',
+    'CR200J-1 1-A':
+        'https://www.china-emu.cn/Trains/Model/Detail-10021-101-S.html',
+    'CR200J-1 2-A':
+        'https://www.china-emu.cn/Trains/Model/Detail-10023-101-S.html',
+    'CR200J-1 3-A':
+        'https://www.china-emu.cn/Trains/Model/Detail-10025-101-S.html',
+    'CR200J-2 1-B':
+        'https://www.china-emu.cn/Trains/Model/Detail-10051-101-S.html',
+    'CR200J-2 2-B':
+        'https://www.china-emu.cn/Trains/Model/Detail-10053-101-S.html',
+    'CR200J-2 3-B':
+        'https://www.china-emu.cn/Trains/Model/Detail-10055-101-S.html',
+    'CR200J-2 S-G':
+        'https://www.china-emu.cn/Trains/Model/Detail-10058-106-S.html',
+    'CR200J-3 1-C':
+        'https://www.china-emu.cn/Trains/Model/Detail-10101-101-S.html',
+    'CR200J-3 1-D':
+        'https://www.china-emu.cn/Trains/Model/Detail-10103-101-S.html',
+    'CR200J-3 2-C':
+        'https://www.china-emu.cn/Trains/Model/Detail-10105-102-S.html',
+    'CR200J-3 3-C':
+        'https://www.china-emu.cn/Trains/Model/Detail-10111-101-S.html',
     'CRH380 A': 'https://www.china-emu.cn/Trains/Model/Detail-30001-101-S.html',
     'CRH380 B': 'https://www.china-emu.cn/Trains/Model/Detail-31002-101-S.html',
-    'CRH380 CL': 'https://www.china-emu.cn/Trains/Model/Detail-31010-101-S.html',
+    'CRH380 CL':
+        'https://www.china-emu.cn/Trains/Model/Detail-31010-101-S.html',
     'CRH380 D': 'https://www.china-emu.cn/Trains/Model/Detail-32001-101-S.html',
     'CRH1 A': 'https://www.china-emu.cn/Trains/Model/Detail-21001-101-S.html',
     'CRH1 B': 'https://www.china-emu.cn/Trains/Model/Detail-21003-101-S.html',
@@ -497,7 +509,8 @@ class _CollectorPage extends ConsumerWidget {
 
   static const _silhouettePath = 'assets/images/silhouette.png';
 
-  String _photoPath(String key) => 'assets/images/models/${key.replaceAll(' ', '_')}.png';
+  String _photoPath(String key) =>
+      'assets/images/models/${key.replaceAll(' ', '_')}.png';
 
   Widget _buildModelGrid(
     List<_ModelEntry> allModels,
@@ -511,7 +524,7 @@ class _CollectorPage extends ConsumerWidget {
         crossAxisCount: 2,
         mainAxisSpacing: 12,
         crossAxisSpacing: 12,
-        childAspectRatio: 1.1,
+        childAspectRatio: 1.0,
       ),
       itemCount: allModels.length,
       itemBuilder: (_, index) {
@@ -542,14 +555,11 @@ class _CollectorPage extends ConsumerWidget {
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Expanded(
-                child: ClipRRect(
-                  borderRadius: const BorderRadius.vertical(
-                    top: Radius.circular(8),
-                  ),
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
                   child: Image.asset(
                     _photoPath(model.key),
-                    fit: BoxFit.cover,
-                    width: double.infinity,
+                    fit: BoxFit.contain,
                     errorBuilder: (_, __, ___) => Icon(
                       isCollected
                           ? Icons.directions_train
@@ -560,7 +570,7 @@ class _CollectorPage extends ConsumerWidget {
                   ),
                 ),
               ),
-              const SizedBox(height: 6),
+              const SizedBox(height: 4),
               Text(
                 model.label,
                 maxLines: 1,
@@ -573,10 +583,7 @@ class _CollectorPage extends ConsumerWidget {
               ),
               Text(
                 model.categoryLabel,
-                style: TextStyle(
-                  fontSize: 10,
-                  color: onColor.withOpacity(0.7),
-                ),
+                style: TextStyle(fontSize: 10, color: onColor.withOpacity(0.7)),
               ),
             ],
           ),
