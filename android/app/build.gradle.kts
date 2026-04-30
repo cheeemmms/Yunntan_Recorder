@@ -7,7 +7,7 @@ plugins {
 
 android {
     namespace = "com.yunntan.train_ledger"
-    compileSdk = 35
+    compileSdk = 36
     ndkVersion = flutter.ndkVersion
 
     compileOptions {
