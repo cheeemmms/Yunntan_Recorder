@@ -312,7 +312,9 @@ class _HomePageState extends ConsumerState<HomePage> {
                 crossFadeState: _filterExpanded
                     ? CrossFadeState.showFirst
                     : CrossFadeState.showSecond,
-                firstChild: _buildFilterPanel(theme, sorted),
+                firstChild: _filterExpanded
+                    ? _buildFilterPanel(theme, sorted)
+                    : const SizedBox.shrink(),
                 secondChild: const SizedBox.shrink(),
               ),
               Expanded(
